@@ -1,2 +1,4 @@
 # MAChallenge23
-TeamSolent Autopilot
+TeamSolent Autopilot project
+
+*Ongoing*
