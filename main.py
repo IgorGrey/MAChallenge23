@@ -2,7 +2,19 @@ import serial
 import ports_module 
 import subprocess
 import threading
+import pynmea2
 
+"$CCTHD,25.00, 0.00,0.00,0.00,0.00,20.00,0.00,0.00"
+"$CCTHD"
+
+input_list_of_cmds = []
+listening_list_of_cmds = ["$GPRMC",]
+
+def input_cmd_of_interest(cmd):
+    pass
+
+def listening_cmd_of_interest(cmd):
+    pass
 
 def setup_input_console(port="COM5"):
     _online_port = ports_module.connect_to_port(port)
@@ -10,6 +22,8 @@ def setup_input_console(port="COM5"):
         while True:
             res = _online_port.readline().decode()
             if res:
+                if res in input_list_of_cmds:
+                    input_cmd_of_interest(res)
                 print(res)
     
     response_thread = threading.Thread(target=handle_reponses)
@@ -21,10 +35,24 @@ def setup_input_console(port="COM5"):
             _online_port.write(new_cmd)
         
 
-def setup_listening_console(port="COM6"):
+def setup_listening_console(port="COM6", baudrate=111520):
     _online_port = ports_module.connect_to_port(port)
     while True:
-        print(_online_port.readline().decode())
+        # print(_online_port.readline().decode())
+        response = _online_port.readline().decode()
+        # print(response)
+        try:
+            nmea_res = pynmea2.parse(response)
+        except pynmea2.ParseError as pynmea_res:
+            print(pynmea_res)
+            continue
+    
+        print(nmea_res.sentence_type)
+            
+        if nmea_res.sentence_type == "RMC":
+            tkp = nmea_res.talker_id, nmea_res.datestamp, nmea_res.latitude, nmea_res.longitude
+
+            print(tkp)
 
 
 def start_program():
