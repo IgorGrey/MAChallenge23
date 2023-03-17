@@ -1,0 +1,353 @@
+<?xml version="1.0" ?>
+<Configuration>
+    <MissionManager>
+        <NoWaypoints>0</NoWaypoints>
+        <NoTracks>1</NoTracks>
+        <WptTrack_0>
+            <Name>TRACK 2</Name>
+            <NoWayPts>8</NoWayPts>
+            <WayPt_0>
+                <CollAvoidParams_0>
+                    <Name>WPT 1</Name>
+                    <LatLong>
+                        <Lat> 7e  f8  d5  f8  28  6c  49  40 </Lat>
+                        <!-- Lat value: 50.845 -->
+                        <Long> 0f  9a  5d  f7  56  e4  e7  bf </Long>
+                        <!-- Long value: -0.746623 -->
+                    </LatLong>
+                    <Active>false</Active>
+                    <FixDistAhead>true</FixDistAhead>
+                    <FixDistRadius>true</FixDistRadius>
+                    <Time2Target> 00  00  00  00  00  c0  72  40 </Time2Target>
+                    <!-- Time2Target value: 300 -->
+                    <SafeRadius> 00  00  00  00  00  00  59  40 </SafeRadius>
+                    <!-- SafeRadius value: 100 -->
+                    <DistAhead> 00  00  00  00  00  00  59  40 </DistAhead>
+                    <!-- DistAhead value: 100 -->
+                    <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                    <!-- Speed value: 0 -->
+                    <COG> 00  00  00  00  00  00  00  00 </COG>
+                    <!-- COG value: 0 -->
+                    <StbdBias> 00  00  00  00  00  00  00  00 </StbdBias>
+                    <!-- StbdBias value: 0 -->
+                </CollAvoidParams_0>
+                <Name>WPT 1</Name>
+                <LatLong>
+                    <Lat> 7e  f8  d5  f8  28  6c  49  40 </Lat>
+                    <!-- Lat value: 50.845 -->
+                    <Long> 0f  9a  5d  f7  56  e4  e7  bf </Long>
+                    <!-- Long value: -0.746623 -->
+                </LatLong>
+                <ShowName>true</ShowName>
+                <UseDepth>false</UseDepth>
+                <UseSpeed>false</UseSpeed>
+                <Depth> 00  00  00  00  00  00  00  00 </Depth>
+                <!-- Depth value: 0 -->
+                <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                <!-- Speed value: 0 -->
+                <Radius> 00  00  00  00  00  00  24  40 </Radius>
+                <!-- Radius value: 10 -->
+            </WayPt_0>
+            <WayPt_1>
+                <CollAvoidParams_1>
+                    <Name>WPT 2</Name>
+                    <LatLong>
+                        <Lat> 36  09  39  4a  39  6c  49  40 </Lat>
+                        <!-- Lat value: 50.8455 -->
+                        <Long> 7d  a5  74  31  4e  e4  e7  bf </Long>
+                        <!-- Long value: -0.746619 -->
+                    </LatLong>
+                    <Active>false</Active>
+                    <FixDistAhead>true</FixDistAhead>
+                    <FixDistRadius>true</FixDistRadius>
+                    <Time2Target> 00  00  00  00  00  c0  72  40 </Time2Target>
+                    <!-- Time2Target value: 300 -->
+                    <SafeRadius> 00  00  00  00  00  00  59  40 </SafeRadius>
+                    <!-- SafeRadius value: 100 -->
+                    <DistAhead> 00  00  00  00  00  00  59  40 </DistAhead>
+                    <!-- DistAhead value: 100 -->
+                    <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                    <!-- Speed value: 0 -->
+                    <COG> 00  00  00  00  00  00  00  00 </COG>
+                    <!-- COG value: 0 -->
+                    <StbdBias> 00  00  00  00  00  00  00  00 </StbdBias>
+                    <!-- StbdBias value: 0 -->
+                </CollAvoidParams_1>
+                <Name>WPT 2</Name>
+                <LatLong>
+                    <Lat> 36  09  39  4a  39  6c  49  40 </Lat>
+                    <!-- Lat value: 50.8455 -->
+                    <Long> 7d  a5  74  31  4e  e4  e7  bf </Long>
+                    <!-- Long value: -0.746619 -->
+                </LatLong>
+                <ShowName>true</ShowName>
+                <UseDepth>false</UseDepth>
+                <UseSpeed>false</UseSpeed>
+                <Depth> 00  00  00  00  00  00  00  00 </Depth>
+                <!-- Depth value: 0 -->
+                <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                <!-- Speed value: 0 -->
+                <Radius> 00  00  00  00  00  00  24  40 </Radius>
+                <!-- Radius value: 10 -->
+            </WayPt_1>
+            <WayPt_2>
+                <CollAvoidParams_2>
+                    <Name>WPT 3</Name>
+                    <LatLong>
+                        <Lat> 4e  34  fe  33  39  6c  49  40 </Lat>
+                        <!-- Lat value: 50.8455 -->
+                        <Long> 25  43  20  29  b4  de  e7  bf </Long>
+                        <!-- Long value: -0.745936 -->
+                    </LatLong>
+                    <Active>false</Active>
+                    <FixDistAhead>true</FixDistAhead>
+                    <FixDistRadius>true</FixDistRadius>
+                    <Time2Target> 00  00  00  00  00  c0  72  40 </Time2Target>
+                    <!-- Time2Target value: 300 -->
+                    <SafeRadius> 00  00  00  00  00  00  59  40 </SafeRadius>
+                    <!-- SafeRadius value: 100 -->
+                    <DistAhead> 00  00  00  00  00  00  59  40 </DistAhead>
+                    <!-- DistAhead value: 100 -->
+                    <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                    <!-- Speed value: 0 -->
+                    <COG> 00  00  00  00  00  00  00  00 </COG>
+                    <!-- COG value: 0 -->
+                    <StbdBias> 00  00  00  00  00  00  00  00 </StbdBias>
+                    <!-- StbdBias value: 0 -->
+                </CollAvoidParams_2>
+                <Name>WPT 3</Name>
+                <LatLong>
+                    <Lat> 4e  34  fe  33  39  6c  49  40 </Lat>
+                    <!-- Lat value: 50.8455 -->
+                    <Long> 25  43  20  29  b4  de  e7  bf </Long>
+                    <!-- Long value: -0.745936 -->
+                </LatLong>
+                <ShowName>true</ShowName>
+                <UseDepth>false</UseDepth>
+                <UseSpeed>false</UseSpeed>
+                <Depth> 00  00  00  00  00  00  00  00 </Depth>
+                <!-- Depth value: 0 -->
+                <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                <!-- Speed value: 0 -->
+                <Radius> 00  00  00  00  00  00  24  40 </Radius>
+                <!-- Radius value: 10 -->
+            </WayPt_2>
+            <WayPt_3>
+                <CollAvoidParams_3>
+                    <Name>WPT 4</Name>
+                    <LatLong>
+                        <Lat> 4e  a2  4b  25  29  6c  49  40 </Lat>
+                        <!-- Lat value: 50.845 -->
+                        <Long> cd  b3  5b  94  a2  de  e7  bf </Long>
+                        <!-- Long value: -0.745927 -->
+                    </LatLong>
+                    <Active>false</Active>
+                    <FixDistAhead>true</FixDistAhead>
+                    <FixDistRadius>true</FixDistRadius>
+                    <Time2Target> 00  00  00  00  00  c0  72  40 </Time2Target>
+                    <!-- Time2Target value: 300 -->
+                    <SafeRadius> 00  00  00  00  00  00  59  40 </SafeRadius>
+                    <!-- SafeRadius value: 100 -->
+                    <DistAhead> 00  00  00  00  00  00  59  40 </DistAhead>
+                    <!-- DistAhead value: 100 -->
+                    <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                    <!-- Speed value: 0 -->
+                    <COG> 00  00  00  00  00  00  00  00 </COG>
+                    <!-- COG value: 0 -->
+                    <StbdBias> 00  00  00  00  00  00  00  00 </StbdBias>
+                    <!-- StbdBias value: 0 -->
+                </CollAvoidParams_3>
+                <Name>WPT 4</Name>
+                <LatLong>
+                    <Lat> 4e  a2  4b  25  29  6c  49  40 </Lat>
+                    <!-- Lat value: 50.845 -->
+                    <Long> cd  b3  5b  94  a2  de  e7  bf </Long>
+                    <!-- Long value: -0.745927 -->
+                </LatLong>
+                <ShowName>true</ShowName>
+                <UseDepth>false</UseDepth>
+                <UseSpeed>false</UseSpeed>
+                <Depth> 00  00  00  00  00  00  00  00 </Depth>
+                <!-- Depth value: 0 -->
+                <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                <!-- Speed value: 0 -->
+                <Radius> 00  00  00  00  00  00  24  40 </Radius>
+                <!-- Radius value: 10 -->
+            </WayPt_3>
+            <WayPt_4>
+                <CollAvoidParams_4>
+                    <Name>WPT 5</Name>
+                    <LatLong>
+                        <Lat> 0d  8d  27  82  38  6c  49  40 </Lat>
+                        <!-- Lat value: 50.8455 -->
+                        <Long> fa  7e  d8  40  28  dd  e7  bf </Long>
+                        <!-- Long value: -0.745747 -->
+                    </LatLong>
+                    <Active>false</Active>
+                    <FixDistAhead>true</FixDistAhead>
+                    <FixDistRadius>true</FixDistRadius>
+                    <Time2Target> 00  00  00  00  00  c0  72  40 </Time2Target>
+                    <!-- Time2Target value: 300 -->
+                    <SafeRadius> 00  00  00  00  00  00  59  40 </SafeRadius>
+                    <!-- SafeRadius value: 100 -->
+                    <DistAhead> 00  00  00  00  00  00  59  40 </DistAhead>
+                    <!-- DistAhead value: 100 -->
+                    <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                    <!-- Speed value: 0 -->
+                    <COG> 00  00  00  00  00  00  00  00 </COG>
+                    <!-- COG value: 0 -->
+                    <StbdBias> 00  00  00  00  00  00  00  00 </StbdBias>
+                    <!-- StbdBias value: 0 -->
+                </CollAvoidParams_4>
+                <Name>WPT 5</Name>
+                <LatLong>
+                    <Lat> 0d  8d  27  82  38  6c  49  40 </Lat>
+                    <!-- Lat value: 50.8455 -->
+                    <Long> fa  7e  d8  40  28  dd  e7  bf </Long>
+                    <!-- Long value: -0.745747 -->
+                </LatLong>
+                <ShowName>true</ShowName>
+                <UseDepth>false</UseDepth>
+                <UseSpeed>false</UseSpeed>
+                <Depth> 00  00  00  00  00  00  00  00 </Depth>
+                <!-- Depth value: 0 -->
+                <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                <!-- Speed value: 0 -->
+                <Radius> 00  00  00  00  00  00  24  40 </Radius>
+                <!-- Radius value: 10 -->
+            </WayPt_4>
+            <WayPt_5>
+                <CollAvoidParams_5>
+                    <Name>WPT 6</Name>
+                    <LatLong>
+                        <Lat> 87  c1  fc  15  32  6c  49  40 </Lat>
+                        <!-- Lat value: 50.8453 -->
+                        <Long> 42  93  fb  54  4c  dc  e7  bf </Long>
+                        <!-- Long value: -0.745642 -->
+                    </LatLong>
+                    <Active>false</Active>
+                    <FixDistAhead>true</FixDistAhead>
+                    <FixDistRadius>true</FixDistRadius>
+                    <Time2Target> 00  00  00  00  00  c0  72  40 </Time2Target>
+                    <!-- Time2Target value: 300 -->
+                    <SafeRadius> 00  00  00  00  00  00  59  40 </SafeRadius>
+                    <!-- SafeRadius value: 100 -->
+                    <DistAhead> 00  00  00  00  00  00  59  40 </DistAhead>
+                    <!-- DistAhead value: 100 -->
+                    <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                    <!-- Speed value: 0 -->
+                    <COG> 00  00  00  00  00  00  00  00 </COG>
+                    <!-- COG value: 0 -->
+                    <StbdBias> 00  00  00  00  00  00  00  00 </StbdBias>
+                    <!-- StbdBias value: 0 -->
+                </CollAvoidParams_5>
+                <Name>WPT 6</Name>
+                <LatLong>
+                    <Lat> 87  c1  fc  15  32  6c  49  40 </Lat>
+                    <!-- Lat value: 50.8453 -->
+                    <Long> 42  93  fb  54  4c  dc  e7  bf </Long>
+                    <!-- Long value: -0.745642 -->
+                </LatLong>
+                <ShowName>true</ShowName>
+                <UseDepth>false</UseDepth>
+                <UseSpeed>false</UseSpeed>
+                <Depth> 00  00  00  00  00  00  00  00 </Depth>
+                <!-- Depth value: 0 -->
+                <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                <!-- Speed value: 0 -->
+                <Radius> 00  00  00  00  00  00  24  40 </Radius>
+                <!-- Radius value: 10 -->
+            </WayPt_5>
+            <WayPt_6>
+                <CollAvoidParams_6>
+                    <Name>WPT 7</Name>
+                    <LatLong>
+                        <Lat> ec  97  99  e3  26  6c  49  40 </Lat>
+                        <!-- Lat value: 50.8449 -->
+                        <Long> 19  be  cf  02  fe  da  e7  bf </Long>
+                        <!-- Long value: -0.745482 -->
+                    </LatLong>
+                    <Active>false</Active>
+                    <FixDistAhead>true</FixDistAhead>
+                    <FixDistRadius>true</FixDistRadius>
+                    <Time2Target> 00  00  00  00  00  c0  72  40 </Time2Target>
+                    <!-- Time2Target value: 300 -->
+                    <SafeRadius> 00  00  00  00  00  00  59  40 </SafeRadius>
+                    <!-- SafeRadius value: 100 -->
+                    <DistAhead> 00  00  00  00  00  00  59  40 </DistAhead>
+                    <!-- DistAhead value: 100 -->
+                    <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                    <!-- Speed value: 0 -->
+                    <COG> 00  00  00  00  00  00  00  00 </COG>
+                    <!-- COG value: 0 -->
+                    <StbdBias> 00  00  00  00  00  00  00  00 </StbdBias>
+                    <!-- StbdBias value: 0 -->
+                </CollAvoidParams_6>
+                <Name>WPT 7</Name>
+                <LatLong>
+                    <Lat> ec  97  99  e3  26  6c  49  40 </Lat>
+                    <!-- Lat value: 50.8449 -->
+                    <Long> 19  be  cf  02  fe  da  e7  bf </Long>
+                    <!-- Long value: -0.745482 -->
+                </LatLong>
+                <ShowName>true</ShowName>
+                <UseDepth>false</UseDepth>
+                <UseSpeed>false</UseSpeed>
+                <Depth> 00  00  00  00  00  00  00  00 </Depth>
+                <!-- Depth value: 0 -->
+                <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                <!-- Speed value: 0 -->
+                <Radius> 00  00  00  00  00  00  24  40 </Radius>
+                <!-- Radius value: 10 -->
+            </WayPt_6>
+            <WayPt_7>
+                <CollAvoidParams_7>
+                    <Name>WPT 8</Name>
+                    <LatLong>
+                        <Lat> db  46  4d  05  26  6c  49  40 </Lat>
+                        <!-- Lat value: 50.8449 -->
+                        <Long> 71  20  24  0b  98  e0  e7  bf </Long>
+                        <!-- Long value: -0.746166 -->
+                    </LatLong>
+                    <Active>false</Active>
+                    <FixDistAhead>true</FixDistAhead>
+                    <FixDistRadius>true</FixDistRadius>
+                    <Time2Target> 00  00  00  00  00  c0  72  40 </Time2Target>
+                    <!-- Time2Target value: 300 -->
+                    <SafeRadius> 00  00  00  00  00  00  59  40 </SafeRadius>
+                    <!-- SafeRadius value: 100 -->
+                    <DistAhead> 00  00  00  00  00  00  59  40 </DistAhead>
+                    <!-- DistAhead value: 100 -->
+                    <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                    <!-- Speed value: 0 -->
+                    <COG> 00  00  00  00  00  00  00  00 </COG>
+                    <!-- COG value: 0 -->
+                    <StbdBias> 00  00  00  00  00  00  00  00 </StbdBias>
+                    <!-- StbdBias value: 0 -->
+                </CollAvoidParams_7>
+                <Name>WPT 8</Name>
+                <LatLong>
+                    <Lat> db  46  4d  05  26  6c  49  40 </Lat>
+                    <!-- Lat value: 50.8449 -->
+                    <Long> 71  20  24  0b  98  e0  e7  bf </Long>
+                    <!-- Long value: -0.746166 -->
+                </LatLong>
+                <ShowName>true</ShowName>
+                <UseDepth>false</UseDepth>
+                <UseSpeed>false</UseSpeed>
+                <Depth> 00  00  00  00  00  00  00  00 </Depth>
+                <!-- Depth value: 0 -->
+                <Speed> 00  00  00  00  00  00  00  00 </Speed>
+                <!-- Speed value: 0 -->
+                <Radius> 00  00  00  00  00  00  24  40 </Radius>
+                <!-- Radius value: 10 -->
+            </WayPt_7>
+            <bXParams> 00  00  00  00 </bXParams>
+            <!-- bXParams value: 0 -->
+        </WptTrack_0>
+        <Target0Name>?&#x03;XTB&#x01;P</Target0Name>
+        <SafeBoundary>
+            <NumWaypoints>0</NumWaypoints>
+        </SafeBoundary>
+    </MissionManager>
+</Configuration>
