@@ -2,7 +2,7 @@ from serial.tools import list_ports
 import serial
 
 
-def check_ports(port0="COM5", port1="COM6", baud_rate=111520):
+def check_ports(port0="COM5", port1="COM6", baud_rate=9600):
     print("Checking available ports...")
     all_ports = list_ports.comports()
     return_list = []
