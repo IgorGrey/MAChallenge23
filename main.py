@@ -2,7 +2,59 @@ import serial
 import ports_module 
 import subprocess
 import threading
+import re
+import nmea_cmds
 
+# $CCAPM,7,64,0,80*51
+# $CCTHD,85.00,0.00,0.00,0.00,0.00,85.00,0.00,0.00
+# $CCAPT,2,5.0,K*3B
+# $CCATC,17,1,1,50,0,2,0,20*65
+# $MMWPL,5050.700022,N,00044.797410,W,WPT 1*07
+# $MMWPL,5050.729901,N,00044.797159,W,WPT 2*0F
+# $MMWPL,5050.729742,N,00044.756131,W,WPT 3*04
+# $MMWPL,5050.700340,N,00044.755628,W,WPT 4*02
+# $MMWPL,5050.728470,N,00044.744804,W,WPT 5*0D
+# $MMWPL,5050.716710,N,00044.738512,W,WPT 6*07
+# $MMWPL,5050.696208,N,00044.728947,W,WPT 7*0E
+# $MMWPL,5050.694618,N,00044.769975,W,WPT 8*02
+# $MMRTE,2,1,c,TRACK 1,WPT 1,WPT 2,WPT 3,WPT 4,WPT 5*13
+# $MMRTE,2,2,c,TRACK 1,WPT 6,WPT 7,WPT 8*18
+# $MMTKP,10,2,TRACK 1,TRACK 1,WPT 1,3.0,0.2,1000*3E
+# $CCAPM,1,64,17,80*61
+
+
+# TODO: Breakdown sentences, match them with patterns?
+
+def calculate_checksum(sentence):
+    checksum = 0
+
+    for byte in sentence:
+        checksum ^= ord(byte)
+        
+    return f"{checksum:02X}"
+
+def try_checksum(checksum):
+    sentence = checksum.split("*")
+
+    print("Sentence", sentence)
+    calculated_checksum = calculate_checksum(sentence[0][1:])
+
+    if calculated_checksum == sentence[2]:
+        print("Sentence", sentence, "is correct")
+    else:
+        print("Incorrect checksum")
+
+
+def check_sentence(nmea_sentence):
+    if not nmea_sentence.starts_with("$"):
+        print("Missing $ sign")
+
+    if not try_checksum(nmea_sentence):
+        print("Checksum is not correct")
+
+    # TODO: write commands that we need and requirements they must meet
+    # {first NMEA chars: regex that needs to be met}
+    pass
 
 def setup_input_console(port="COM5"):
     _online_port = ports_module.connect_to_port(port)

@@ -18,7 +18,7 @@ def check_ports(port0="COM5", port1="COM6", baud_rate=111520):
             print("Port2 found", port1)
             return_list.append(port1)
 
-    if len(return_list) == 1:
+    if len(return_list) == 2:
         return return_list
     else:
         print("One of the ports is not available")
