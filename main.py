@@ -3,8 +3,13 @@ import ports_module
 import subprocess
 import threading
 import re
-import nmea_cmds
+import logging
+# import nmea_cmds
 import pynmea2
+from datetime import datetime
+
+_LOG_FILE = "script_log.log"
+_LOG_TIME_FORMAT = "%Y-%m-%D %H:%M:%S"
 
 # $CCAPM,7,64,0,80*51
 # $CCTHD,85.00,0.00,0.00,0.00,0.00,85.00,0.00,0.00
@@ -32,7 +37,7 @@ def calculate_checksum(sentence):
     for byte in sentence:
         checksum ^= ord(byte)
         
-    return f"{checksum:02X}"
+    return print(f"{checksum:02X}")
 
 def try_checksum(checksum):
     sentence = checksum.split("*")
@@ -66,11 +71,6 @@ def check_sentence(nmea_sentence):
 input_list_of_cmds = []
 listening_list_of_cmds = ["$GPRMC",]
 
-def input_cmd_of_interest(cmd):
-    pass
-
-def listening_cmd_of_interest(cmd):
-    pass
 
 def setup_input_console(port="COM5"):
     _online_port = ports_module.connect_to_port(port)
@@ -82,8 +82,11 @@ def setup_input_console(port="COM5"):
                     input_cmd_of_interest(res)
                 print(res)
     
-    response_thread = threading.Thread(target=handle_reponses)
-    response_thread.start()
+    try:
+        response_thread = threading.Thread(target=handle_reponses)
+        response_thread.start()
+    except:
+        logger.error()
 
     while True:
         try:
@@ -98,7 +101,7 @@ def setup_input_console(port="COM5"):
             continue
         
 
-def setup_listening_console(port="COM6", baudrate=9600):
+def setup_listening_console(port="COM6", baudrate=115200):
     _online_port = ports_module.connect_to_port(port)
     while True:
         response = _online_port.readline().decode()
@@ -136,13 +139,15 @@ def start_program():
         print("There is a problem with configuring the port", oe)
     
 
-    # TODO: setup 2 consoles, one listen to output from COM6
-    # the second one connected to a COM5 which pushes responses
-    # this is not the best implementation
-    # cmd = f"powershell.exe -NoExit python .\main.py ''"
-    # process1 = subprocess.Popen(['powershell.exe', '-Command', 'while ($true) { Receive-Output1 }'])
-    # input_terminal = subprocess.Popen(["powershell", "-Command", "py -c 'from threading import Thread; from script import "])
-
 
 if __name__ == "__main__":
+    # Start logger
+    logger = logging.getLogger(__name__)
+    file_handler = logging.FileHandler(_LOG_FILE)
+    log_formatter = logging.Formatter("{asctime}: {level} {message}")
+    formatter = logging.Formatter(log_formatter, style="{")
+    file_handler.setFormatter(log_formatter)
+    logger.addHandler(file_handler)
+    logger.info("Script has started")
+
     start_program()
