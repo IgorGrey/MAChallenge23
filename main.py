@@ -1,4 +1,5 @@
 import serial
+import socket
 import ports_module 
 import subprocess
 import threading
@@ -10,6 +11,16 @@ from datetime import datetime
 
 _LOG_FILE = "script_log.log"
 _LOG_TIME_FORMAT = "%Y-%m-%D %H:%M:%S"
+
+UDP_IP = "127.0.0.1"
+UDP_PORT = 8888
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+def send_cmd(cmd):
+    new_cmd = f"{cmd}\r\n".encode("ascii")
+    sock.sendto(new_cmd, (UDP_IP, UDP_PORT))
+
 
 # $CCAPM,7,64,0,80*51
 # $CCTHD,85.00,0.00,0.00,0.00,0.00,85.00,0.00,0.00
@@ -71,8 +82,6 @@ def check_input_sentence(nmea_sentence):
 
     return nmea_sentence
 
-def handle_found_sentence(sentence):
-    pass
 
 
 # Open powershell and run this script and listening port
@@ -81,8 +90,24 @@ def handle_found_sentence(sentence):
 "$CCTHD,25.00, 0.00,0.00,0.00,0.00,20.00,0.00,0.00"
 "$CCTHD"
 
-input_list_of_cmds = []
+input_list_of_cmds = {0: "GPRMC"}
 listening_list_of_cmds = ["$GPRMC",]
+
+# TODO: Commands of interest
+# $GPRMC, 000305.39,   A,           5050.699892,N,          00044.772998,   W,         0.0,                0.0,                 230418,       4.0,  W  ,A   ,S   *41
+# GPRMC, <Timestamp>, <GPS status>, <lat>, <lat_direction>, <long>, <long_direction>, <speed over ground>, <magnetic variation> <date_stamp>, <navigation status>
+# GPRMC, <Timestamp>, <GPS status>, <lat>, <lat_direction>, <long>, <long_direction>, <speed over ground>, <track true> <date_stamp>, <mag variation> <mag dir> <mode ind>
+
+# GPRMC what we need
+# Time (UTC), status, lat, N/S, long, E/W, Speed over ground, track mode good, date (ddmmyy), magnetic variation deg, E/W, status (A/V)
+def handle_found_sentence(sentence_num, nmea_sentence):
+
+    if sentence_num == 0:
+# ['$GPRMC', '000305.53', 'A', '5050.699892', 'N', '00044.772998', 'W', '0.0', '0.0', '230418', '4.0', 'W', 'A', 'S*4D']
+        # gprmc_var = nmea_sentence[0].split(",")
+
+        # TODO: if opencpn complains about the last char, split and send without it, keep in mind checksum
+        send_cmd(nmea_sentence)
 
 
 def setup_input_console(port="COM5"):
@@ -93,8 +118,11 @@ def setup_input_console(port="COM5"):
         while True:
             res = _online_port.readline().decode()
             if res:
-                if res in input_list_of_cmds:
-                    print(res, "Found in a list <<<<")
+                for key, value in input_list_of_cmds.items():
+                    if res.startswith("$" + value):
+                        handle_found_sentence(key, res)
+                # if res in input_list_of_cmds:
+                #     print(res, "Found in a list <<<<")
                 print(res)
     
     try:
