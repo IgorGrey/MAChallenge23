@@ -51,7 +51,7 @@ def try_checksum(checksum):
         print("Incorrect checksum")
 
 
-def check_sentence(nmea_sentence):
+def check_output_sentence(nmea_sentence):
     if not nmea_sentence.starts_with("$"):
         print("Missing $ sign")
 
@@ -60,6 +60,19 @@ def check_sentence(nmea_sentence):
 
     # TODO: write commands that we need and requirements they must meet
     # {first NMEA chars: regex that needs to be met}
+
+
+def check_input_sentence(nmea_sentence):
+    # Run checks if the sentence meets the basic rules
+    # TODO: check if checksum is correct
+    # TODO: check if checksum is present
+    if not nmea_sentence.starts_with("$"):
+        nmea_sentence = "$" + nmea_sentence
+
+    return nmea_sentence
+
+def handle_found_sentence(sentence):
+    pass
 
 
 # Open powershell and run this script and listening port
@@ -74,19 +87,24 @@ listening_list_of_cmds = ["$GPRMC",]
 
 def setup_input_console(port="COM5"):
     _online_port = ports_module.connect_to_port(port)
+
+
     def handle_reponses():
         while True:
             res = _online_port.readline().decode()
             if res:
                 if res in input_list_of_cmds:
-                    input_cmd_of_interest(res)
+                    print(res, "Found in a list <<<<")
                 print(res)
     
     try:
-        response_thread = threading.Thread(target=handle_reponses)
-        response_thread.start()
+        # response_thread = threading.Thread(target=handle_reponses)
+        # response_thread.start()
+        handle_reponses()
+
     except:
-        logger.error()
+        pass
+        # logger.error()
 
     while True:
         try:
@@ -142,12 +160,12 @@ def start_program():
 
 if __name__ == "__main__":
     # Start logger
-    logger = logging.getLogger(__name__)
-    file_handler = logging.FileHandler(_LOG_FILE)
-    log_formatter = logging.Formatter("{asctime}: {level} {message}")
-    formatter = logging.Formatter(log_formatter, style="{")
-    file_handler.setFormatter(log_formatter)
-    logger.addHandler(file_handler)
-    logger.info("Script has started")
+    # logger = logging.getLogger(__name__)
+    # file_handler = logging.FileHandler(_LOG_FILE)
+    # log_formatter = logging.Formatter("{asctime}: {level} {message}")
+    # formatter = logging.Formatter(log_formatter, style="{")
+    # file_handler.setFormatter(log_formatter)
+    # logger.addHandler(file_handler)
+    # logger.info("Script has started")
 
     start_program()
