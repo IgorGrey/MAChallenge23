@@ -76,7 +76,6 @@ def check_output_sentence(nmea_sentence):
 def check_input_sentence(nmea_sentence):
     # Run checks if the sentence meets the basic rules
     # TODO: check if checksum is correct
-    # TODO: check if checksum is present
     if not nmea_sentence.starts_with("$"):
         nmea_sentence = "$" + nmea_sentence
 
