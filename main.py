@@ -89,7 +89,9 @@ def check_input_sentence(nmea_sentence):
 "$CCTHD,25.00, 0.00,0.00,0.00,0.00,20.00,0.00,0.00"
 "$CCTHD"
 
-input_list_of_cmds = {0: "GPRMC"}
+
+# IMPORTANT! Add which command you want to extract
+input_list_of_cmds = {0: "GPRMC", 1: "THD..."}
 listening_list_of_cmds = ["$GPRMC",]
 
 # TODO: Commands of interest
@@ -99,6 +101,8 @@ listening_list_of_cmds = ["$GPRMC",]
 
 # GPRMC what we need
 # Time (UTC), status, lat, N/S, long, E/W, Speed over ground, track mode good, date (ddmmyy), magnetic variation deg, E/W, status (A/V)
+
+# IMPORTANT this is where the command of interest is passed to
 def handle_found_sentence(sentence_num, nmea_sentence):
 
     if sentence_num == 0:
