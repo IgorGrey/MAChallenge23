@@ -8,19 +8,20 @@ import logging
 # import nmea_cmds
 import pynmea2
 from datetime import datetime
+import time
 
 _LOG_FILE = "script_log.log"
 _LOG_TIME_FORMAT = "%Y-%m-%D %H:%M:%S"
 
 UDP_IP = "127.0.0.1"
-UDP_PORT = 8888
+UDP_PORT = 2947
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def send_cmd(cmd):
     # new_cmd = f"{cmd}\r\n".encode("ascii")
-    new_cmd = "$GPRMC,001115.81,A,5050.700849,N,00044.822914,W,0.0,269.7,230418,4.0,W,A,S*43"
-    sock.sendto(new_cmd, (UDP_IP, UDP_PORT))
+    # new_cmd = "$GPRMC,001115.81,A,5050.700849,N,00044.822914,W,0.0,269.7,230418,4.0,W,A,S*43"
+    sock.sendto(cmd, (UDP_IP, UDP_PORT))
 
 
 # $CCAPM,7,64,0,80*51
@@ -49,7 +50,7 @@ def calculate_checksum(sentence):
     for byte in sentence:
         checksum ^= ord(byte)
         
-    return print(f"{checksum:02X}")
+    return f"{checksum:02X}"
 
 def try_checksum(checksum):
     sentence = checksum.split("*")
@@ -111,7 +112,16 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         # gprmc_var = nmea_sentence[0].split(",")
 
         # TODO: if opencpn complains about the last char, split and send without it, keep in mind checksum
-        send_cmd(nmea_sentence)
+        # print("To be sent", nmea_sentence)
+        # time.sleep(0.8)
+
+        # index = ["$GPRMC", "var1", "var2", "var3"] MUST BE STRING
+        # index = ",".join(index)
+        # index = index + "*" + calculate_checksum(index)
+        # index = f"{index}\r\n".encode("ascii")
+        # _online_port.write(new_cmd)
+
+        send_cmd(nmea_sentence.encode("ascii"))
 
 
 def setup_input_console(port="COM5"):
@@ -127,12 +137,12 @@ def setup_input_console(port="COM5"):
                         handle_found_sentence(key, res)
                 # if res in input_list_of_cmds:
                 #     print(res, "Found in a list <<<<")
-                print(res)
+                # print(res)
     
     try:
-        # response_thread = threading.Thread(target=handle_reponses)
-        # response_thread.start()
-        handle_reponses()
+        response_thread = threading.Thread(target=handle_reponses)
+        response_thread.start()
+        # handle_reponses()
 
     except:
         pass
@@ -143,9 +153,15 @@ def setup_input_console(port="COM5"):
             # INPUT FORMAT $COMMAND<NUMBERS>,<NUMBERS>,..<CHECKSUM>
             # OR SIMPLE WAY $SENTENCE*CHECKSUM
             new_cmd = input("Enter a command:")
+            checksum = calculate_checksum(new_cmd[1:])
+            new_cmd = new_cmd + "*" +  checksum
+            # new_cmd = new_cmd.encode("ascii")
+            # new_cmd = f"{new_cmd}\r\n"
             new_cmd = f"{new_cmd}\r\n".encode("ascii")
             if new_cmd:
                 _online_port.write(new_cmd)
+                print("Sent", new_cmd)
+                # send_cmd(new_cmd)
         except:
             print("Error has occured")
             continue
