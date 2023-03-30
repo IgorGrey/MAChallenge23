@@ -14,6 +14,6 @@ def angle_between_waypoints(coords):
     mag_v2 = math.sqrt(v2[0]**2 + v2[1]**2)
     
     # Calculate the angle between the vectors
-    angle = math.degrees(math.acos(dot_product / (mag_v1 * mag_v2)))
+    angle = math.ceil(math.degrees(math.acos(dot_product / (mag_v1 * mag_v2))))
     
     return angle
