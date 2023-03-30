@@ -5,7 +5,7 @@ def calculate_average_speed_in_knots(data):
     Calculate the average speed in knots based on a list of timestamp and distance data.
 
     Parameters:
-    data (list): A list of 5 tuples, each containing a timestamp in Epoch Unix format and distance in meters.
+    data (list): A list of tuples, each containing an Epoch Unix timestamp in format 001115.81 and distance in meters.
 
     Returns:
     str: The average speed in knots as a string with one decimal place.
