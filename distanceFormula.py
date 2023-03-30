@@ -1,6 +1,6 @@
 from math import radians, sin, cos, sqrt, atan2
 
-def calculate_distance(lon1, lat1, lon2, lat2):
+def calculate_distance(lat1, lon1, lat2, lon2):
     # Convert degrees to radians
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
     

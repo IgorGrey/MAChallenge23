@@ -9,6 +9,11 @@ import logging
 import pynmea2
 from datetime import datetime
 import time
+import headingFormula
+import generate_thd_hsc
+import angle_between_waypoints
+import calculateSpeed
+import distanceFormula
 
 _LOG_FILE = "script_log.log"
 _LOG_TIME_FORMAT = "%Y-%m-%D %H:%M:%S"
@@ -25,10 +30,15 @@ def send_cmd(cmd):
 
 
 # LOGIC: [lat1, lon1, lat2, lon2,...]
+
+heading_found = False
+
 waypoints = [50.845000367, -0.746623500, 50.845498350, -0.746619317, 
              50.845495700, -0.745935517, 50.845005667, -0.745927133,
              50.845474500, -0.745746733, 50.845278500, -0.745641867,
              50.844936800, -0.745482450, 50.844910300, -0.746166250]
+            
+waypoints.reverse()
 
 # $CCAPM,7,64,0,80*51
 # $CCTHD,85.00,0.00,0.00,0.00,0.00,85.00,0.00,0.00
@@ -110,12 +120,76 @@ listening_list_of_cmds = ["$GPRMC",]
 # GPRMC what we need
 # Time (UTC), status, lat, N/S, long, E/W, Speed over ground, track mode good, date (ddmmyy), magnetic variation deg, E/W, status (A/V)
 
+_online_port = ports_module.connect_to_port("COM5")
 # IMPORTANT this is where the command of interest is passed to
 def handle_found_sentence(sentence_num, nmea_sentence):
-
-    if sentence_num == 0:
+    if sentence_num == 0 and len(waypoints) > 1:
 # ['$GPRMC', '000305.53', 'A', '5050.699892', 'N', '00044.772998', 'W', '0.0', '0.0', '230418', '4.0', 'W', 'A', 'S*4D']
-        # gprmc_var = nmea_sentence[0].split(",")
+        gprmc_var = nmea_sentence.split(",")
+        timestamp = gprmc_var[1]
+        lat = float(gprmc_var[3])
+        lon = float(gprmc_var[5])
+        heading_dir = gprmc_var[11]
+        distance = distanceFormula.calculate_distance(lat, lon, len(waypoints)-2, len(waypoints)-1)
+        # print(distance)
+
+        if distance < 20:
+            thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
+            thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+            thd_sentence = thd_sentence + "\r\n"
+            thd_sentence = thd_sentence.encode("ascii")
+            _online_port.write(thd_sentence)
+            angle = angle_between_waypoints.angle_between_waypoints([(lat, lon), (len(waypoints)-2, len(waypoints)-1), (len(waypoints)-4, len(waypoints)-3)])
+            if angle <= 90: 
+                thd_sentence = generate_thd_hsc.generate_hsc_sentence(1)
+                thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                thd_sentence = thd_sentence + "\r\n"
+                thd_sentence = thd_sentence.encode("ascii")
+                _online_port.write(thd_sentence)
+                if distance <= 15:
+                    waypoints.pop()
+                    waypoints.pop()
+                    heading_calc = headingFormula.calculate_heading(lat, lon, len(waypoints)-2, len(waypoints)-1)
+                    print("Reached waypoint")
+                    hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+                    hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+                    hsc_sentence = hsc_sentence + "\r\n"
+                    hsc_sentence = hsc_sentence.encode("ascii")
+                    _online_port.write(hsc_sentence)
+                    time.sleep(10)
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(84)
+                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                    thd_sentence = thd_sentence + "\r\n"
+                    thd_sentence = thd_sentence.encode("ascii")
+                    _online_port.write(thd_sentence)
+            else:
+                if distance < 10:
+                    waypoints.pop()
+                    waypoints.pop()
+                    heading_calc = headingFormula.calculate_heading(lon, lat, len(waypoints)-2, len(waypoints)-1)
+                    print("Reached waypoint")
+                    hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+                    hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+                    hsc_sentence = hsc_sentence + "\r\n"
+                    hsc_sentence = hsc_sentence.encode("ascii")
+                    _online_port.write(hsc_sentence)
+                    time.sleep(5)
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(84)
+                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                    thd_sentence = thd_sentence + "\r\n"
+                    thd_sentence = thd_sentence.encode("ascii")
+                    _online_port.write(thd_sentence)
+
+
+            # elif angle < 90:
+            #     pass
+            # elif angle < 45 and distance < 15:
+            #     pass
+            # elif angle < 45 and distance < 10:
+            #     pass
+            # elif angle < 30 and distance < 5:
+            #     pass
+
 
         # TODO: if opencpn complains about the last char, split and send without it, keep in mind checksum
         # print("To be sent", nmea_sentence)
@@ -131,13 +205,26 @@ def handle_found_sentence(sentence_num, nmea_sentence):
 
 
 def setup_input_console(port="COM5"):
-    _online_port = ports_module.connect_to_port(port)
-
-
     def handle_reponses():
+        i = 1
         while True:
             res = _online_port.readline().decode()
             if res:
+                if res.startswith("$" + "GPRMC") and i == 1:
+                    gprmc_var = res.split(",")
+                    lat = float(gprmc_var[3])
+                    lon = float(gprmc_var[5])
+                    heading_calc = headingFormula.calculate_heading(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                    print(heading_calc)
+                    hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+                    hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+                    hsc_sentence = hsc_sentence + "\r\n"
+                    hsc_sentence = hsc_sentence.encode("ascii")
+                    print(hsc_sentence)
+                    _online_port.write(hsc_sentence)
+                    print("Init")
+                    i = 0
+
                 for key, value in input_list_of_cmds.items():
                     if res.startswith("$" + value):
                         handle_found_sentence(key, res)
