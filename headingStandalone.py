@@ -48,6 +48,17 @@ def calculate_heading(current_lat, current_lon, target_lat, target_lon):
     
     return heading_deg
 
+def ddm_to_dd(latitude, longitude):
+    lat_degrees = int(latitude)
+    lat_decimal_minutes = latitude - lat_degrees
+    lat_dd = lat_degrees + (lat_decimal_minutes * 60) / 3600
+
+    lon_degrees = int(longitude)
+    lon_decimal_minutes = longitude - lon_degrees
+    lon_dd = lon_degrees + (lon_decimal_minutes * 60) / 3600
+
+    return lat_dd, lon_dd
+
 # Example usage
 nmea_sentence = "$GPRMC,001115.81,A,5050.710799,N,00044.755897,W,0.0,269.7,230418,4.0,W,A,S*43"
 target_lat, target_lon = 50.845, 0.7462166666666667

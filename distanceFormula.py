@@ -11,7 +11,7 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     distance = 6371 * c * 1000
     
-    return distance
+    return round(float(distance))
     
 # Test the function with the provided GPS coordinates
 lat1 = 50.50699892
