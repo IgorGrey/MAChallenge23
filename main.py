@@ -33,11 +33,12 @@ def send_cmd(cmd):
 
 heading_found = False
 
-waypoints = [50.845000367, -0.746623500, 50.845498350, -0.746619317, 
-             50.845495700, -0.745935517, 50.845005667, -0.745927133,
-             50.845474500, -0.745746733, 50.845278500, -0.745641867,
-             50.844936800, -0.745482450, 50.844910300, -0.746166250]
-            
+waypoints = [50.50710799, -000.44755897,50.50732397, -000.44755897,
+             50.50732394, -000.44738794, 50.50710799, -000.44798794,
+             50.50710799, -000.44721691, 50.50732397, -000.44721691,
+             50.50732397, -000.44704588, 50.50710799, -000.44704588]
+            #try to reverse the list manually and get them by them one 
+            # becuase it is 
 waypoints.reverse()
 
 # $CCAPM,7,64,0,80*51
@@ -128,10 +129,16 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         gprmc_var = nmea_sentence.split(",")
         timestamp = gprmc_var[1]
         lat = float(gprmc_var[3])
+        latitude = float(lat/100)
+        
         lon = float(gprmc_var[5])
+        
+        longitude = -(lon/100)
+        
         heading_dir = gprmc_var[11]
-        distance = distanceFormula.calculate_distance(lat, lon, len(waypoints)-2, len(waypoints)-1)
-        # print(distance)
+        distance = distanceFormula.calculate_distance(latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
+        print( latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
+        print(distance, "distance")
 
         if distance < 20:
             thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
@@ -139,7 +146,8 @@ def handle_found_sentence(sentence_num, nmea_sentence):
             thd_sentence = thd_sentence + "\r\n"
             thd_sentence = thd_sentence.encode("ascii")
             _online_port.write(thd_sentence)
-            angle = angle_between_waypoints.angle_between_waypoints([(lat, lon), (len(waypoints)-2, len(waypoints)-1), (len(waypoints)-4, len(waypoints)-3)])
+            angle = angle_between_waypoints.angle_between_waypoints([(latitude, longitude), (waypoints[len(waypoints)-1], waypoints[len(waypoints)-2]), (waypoints[len(waypoints)-3], waypoints[len(waypoints)-4])])
+            #print(heading_calc, "0")
             if angle <= 90: 
                 thd_sentence = generate_thd_hsc.generate_hsc_sentence(1)
                 thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
@@ -149,7 +157,8 @@ def handle_found_sentence(sentence_num, nmea_sentence):
                 if distance <= 15:
                     waypoints.pop()
                     waypoints.pop()
-                    heading_calc = headingFormula.calculate_heading(lat, lon, len(waypoints)-2, len(waypoints)-1)
+                    heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                    print(heading_calc, "1")
                     print("Reached waypoint")
                     hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
                     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
@@ -166,7 +175,8 @@ def handle_found_sentence(sentence_num, nmea_sentence):
                 if distance < 10:
                     waypoints.pop()
                     waypoints.pop()
-                    heading_calc = headingFormula.calculate_heading(lon, lat, len(waypoints)-2, len(waypoints)-1)
+                    heading_calc = headingFormula.calculate_heading(longitude, latitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                    print(heading_calc, "2")
                     print("Reached waypoint")
                     hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
                     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
@@ -213,9 +223,11 @@ def setup_input_console(port="COM5"):
                 if res.startswith("$" + "GPRMC") and i == 1:
                     gprmc_var = res.split(",")
                     lat = float(gprmc_var[3])
+                    latitude = float(lat/100)
                     lon = float(gprmc_var[5])
-                    heading_calc = headingFormula.calculate_heading(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
-                    print(heading_calc)
+                    longitude = -(lon/100)
+                    heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                    print(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
                     hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
                     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
                     hsc_sentence = hsc_sentence + "\r\n"

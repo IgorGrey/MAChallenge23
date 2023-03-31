@@ -1,6 +1,6 @@
 import math
 
-def calculate_heading(lat1, lon1, lat2, lon2):
+def calculate_heading(lat2, lon2, lat1, lon1):
     # Convert latitude and longitude to radians
     lat1 = math.radians(lat1)
     lon1 = math.radians(lon1)
@@ -23,9 +23,9 @@ def calculate_heading(lat1, lon1, lat2, lon2):
     return heading
 
 # Test the function with the provided GPS coordinates
-lat1 = 50.84518
-lon1 = -0.74677
-lat2 = 50.84554
-lon2 = -0.74677
-heading = calculate_heading(lat1, lon1, lat2, lon2)
-print("Heading: {:.1f} degrees".format(heading))
+#lat2 = 50.7000
+#lon2 = -0.44773
+#lat1 = 50.50710799
+#lon1 = -000.44755897
+#heading = calculate_heading(lat1, lon1, lat2, lon2)
+#print("Heading: {:.1f} degrees".format(heading))
