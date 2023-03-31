@@ -14,6 +14,8 @@ import generate_thd_hsc
 import angle_between_waypoints
 import calculateSpeed
 import distanceFormula
+import lonconverter
+import latconverter
 
 _LOG_FILE = "script_log.log"
 _LOG_TIME_FORMAT = "%Y-%m-%D %H:%M:%S"
@@ -33,12 +35,14 @@ def send_cmd(cmd):
 
 heading_found = False
 
-waypoints = [50.50710799, -000.44755897,50.50732397, -000.44755897,
-             50.50732394, -000.44738794, 50.50710799, -000.44798794,
-             50.50710799, -000.44721691, 50.50732397, -000.44721691,
-             50.50732397, -000.44704588, 50.50710799, -000.44704588]
+waypoints = [ 50.845, 0.7459316167, 50.846, 0.7459316167, 
+              50.846, 0.7456465667,50.845, 0.7466465667,
+              50.845,0.7453615167,50.846,0.7453615167 ,
+              50.846,0.7450764667,50.845,0.7450764667 ]
+
             #try to reverse the list manually and get them by them one 
             # becuase it is 
+
 waypoints.reverse()
 
 # $CCAPM,7,64,0,80*51
@@ -129,18 +133,21 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         gprmc_var = nmea_sentence.split(",")
         timestamp = gprmc_var[1]
         lat = float(gprmc_var[3])
-        latitude = float(lat/100)
+        lat = (lat/100)
+
+        latitude = latconverter.convert_minutes_to_degrees(lat)
         
         lon = float(gprmc_var[5])
+        lon = (lon/100)
         
-        longitude = -(lon/100)
-        
+        longitude = lonconverter.convert_minutes_to_degrees(lon)
+    
         heading_dir = gprmc_var[11]
         distance = distanceFormula.calculate_distance(latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
         print( latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
         print(distance, "distance")
 
-        if distance < 20:
+        if distance < 15:
             thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
             thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
             thd_sentence = thd_sentence + "\r\n"
@@ -223,11 +230,13 @@ def setup_input_console(port="COM5"):
                 if res.startswith("$" + "GPRMC") and i == 1:
                     gprmc_var = res.split(",")
                     lat = float(gprmc_var[3])
-                    latitude = float(lat/100)
+                    lat = (lat/100)
+                    latitude = latconverter.convert_minutes_to_degrees(lat)
                     lon = float(gprmc_var[5])
-                    longitude = -(lon/100)
+                    lon= (lon/100)
+                    longitude = lonconverter.convert_minutes_to_degrees(lon)
                     heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
-                    print(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                    print(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2], "im here")
                     hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
                     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
                     hsc_sentence = hsc_sentence + "\r\n"
