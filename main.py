@@ -35,11 +35,22 @@ def send_cmd(cmd):
 
 heading_found = False
 
-waypoints = [ 50.845, 0.7459316167, 50.846, 0.7459316167, 
-              50.846, 0.7456465667,50.845, 0.7466465667,
-              50.845,0.7453615167,50.846,0.7453615167 ,
-              50.846,0.7450764667,50.845,0.7450764667 ]
-
+# waypoints = [ 50.845, 0.7459316167, 50.846, 0.7459316167, 
+#               50.846, 0.7456465667,50.845, 0.7466465667,
+#               50.845,0.7453615167,50.846,0.7453615167 ,
+#               50.846,0.7450764667,50.845,0.7450764667 ]
+# waypoints = [50.50710799, -000.44755897,50.50732397, -000.44755897,
+#              50.50732394, -000.44738794, 50.50710799, -000.44798794,
+#              50.50710799, -000.44721691, 50.50732397, -000.44721691,
+#              50.50732397, -000.44704588, 50.50710799, -000.44704588]
+waypoints = [50.84517998333334 ,-0.7459316166666666,
+            50.84553995 ,-0.7459316166666666,
+            50.8455399 ,-0.7456465666666666,
+            50.84517998333334 ,-0.7466465666666667,
+            50.84517998333334 ,-0.7453615166666666,
+            50.84553995 ,-0.7453615166666666,
+            50.84553995,-0.7450764666666667,
+            50.84517998333334 ,-0.7450764666666667]
             #try to reverse the list manually and get them by them one 
             # becuase it is 
 
@@ -124,6 +135,8 @@ listening_list_of_cmds = ["$GPRMC",]
 
 # GPRMC what we need
 # Time (UTC), status, lat, N/S, long, E/W, Speed over ground, track mode good, date (ddmmyy), magnetic variation deg, E/W, status (A/V)
+# once without and once with converter
+
 
 _online_port = ports_module.connect_to_port("COM5")
 # IMPORTANT this is where the command of interest is passed to
@@ -140,7 +153,7 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         lon = float(gprmc_var[5])
         lon = (lon/100)
         
-        longitude = lonconverter.convert_minutes_to_degrees(lon)
+        longitude = -(lonconverter.convert_minutes_to_degrees(lon))
     
         heading_dir = gprmc_var[11]
         distance = distanceFormula.calculate_distance(latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
@@ -250,7 +263,7 @@ def setup_input_console(port="COM5"):
                     if res.startswith("$" + value):
                         
                         handle_found_sentence(key, res)
-            simple_vis(res)
+           
                 # if res in input_list_of_cmds:
                 #     print(res, "Found in a list <<<<")
                 # print(res)
