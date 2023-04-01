@@ -157,8 +157,9 @@ def handle_found_sentence(sentence_num, nmea_sentence):
     
         heading_dir = gprmc_var[11]
         distance = distanceFormula.calculate_distance(latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
-        print( latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
-        print(distance, "distance")
+        
+        #print( latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
+        #print(distance, "distance")
 
         if distance < 15:
             thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
@@ -247,8 +248,9 @@ def setup_input_console(port="COM5"):
                     latitude = latconverter.convert_minutes_to_degrees(lat)
                     lon = float(gprmc_var[5])
                     lon= (lon/100)
-                    longitude = lonconverter.convert_minutes_to_degrees(lon)
+                    longitude = -(lonconverter.convert_minutes_to_degrees(lon))
                     heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                    print(heading_calc)
                     print(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2], "im here")
                     hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
                     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
@@ -258,6 +260,7 @@ def setup_input_console(port="COM5"):
                     _online_port.write(hsc_sentence)
                     print("Init")
                     i = 0
+
 
             for key, value in input_list_of_cmds.items():
                     if res.startswith("$" + value):

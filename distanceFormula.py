@@ -14,12 +14,13 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     return round(float(distance))
     
 # Test the function with the provided GPS coordinates
-lat1 = 50.50699892
-lon1 = -0.44772998
-lat2 = 50.50710799
-lon2 = -000.44755897
+lat1 = 50.844998199999999
+lon1 = -0.7462166499999999
+lat2 = 50.84517998333334
+lon2 = -0.74593161666666666
 
 distance = calculate_distance(lon1, lat1, lon2, lat2)
 print(distance) # Output: 41.96276179911194 (approx. 42 meters)
+
 
 
