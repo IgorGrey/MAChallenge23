@@ -160,32 +160,42 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         # longitude = -(lonconverter.convert_minutes_to_degrees(lon))
     
         # heading_dir = gprmc_var[11]
+       
+    
         latitude,longitude = headingStandalone.extract_lat_lon(nmea_sentence)
         
         distance = distanceFormula.calculate_distance(latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
         print(distance)
         #print( latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
         #print(distance, "distance")
-
-        if distance < 15:
+        
+        # experiment1, trying to evoid agnle calc in loop
+        angle = None
+        
+        if distance < 10:
             thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
             thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
             thd_sentence = thd_sentence + "\r\n"
             thd_sentence = thd_sentence.encode("ascii")
             _online_port.write(thd_sentence)
-            angle = angle_between_waypoints.angle_between_waypoints([(latitude, longitude), (waypoints[len(waypoints)-1], waypoints[len(waypoints)-2]), (waypoints[len(waypoints)-3], waypoints[len(waypoints)-4])])
-            #print(heading_calc, "0")
+
+            
+            # experiment1 cont
+            if  not anlge :
+                angle = angle_between_waypoints.angle_between_waypoints([(latitude, longitude), (waypoints[len(waypoints)-1], waypoints[len(waypoints)-2]), (waypoints[len(waypoints)-3], waypoints[len(waypoints)-4])])
+            print("Angle to the next waypoint calculated: ", angle, )
+            
             if angle <= 90: 
                 thd_sentence = generate_thd_hsc.generate_hsc_sentence(17)
                 thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
                 thd_sentence = thd_sentence + "\r\n"
                 thd_sentence = thd_sentence.encode("ascii")
                 _online_port.write(thd_sentence)
-                if distance <= 15:
+                if distance <= 2:
                     waypoints.pop()
                     waypoints.pop()
                     heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
-                    print(heading_calc, "1")
+                    print(heading_calc, "Heading set to <==")
                     print("Reached waypoint")
                     hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
                     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
@@ -256,15 +266,18 @@ def setup_input_console(port="COM5"):
                     # lon = float(gprmc_var[5])
                     # lon= (lon/100)
                     # longitude = -(lonconverter.convert_minutes_to_degrees(lon))
-                    thd_sentence = generate_thd_hsc.generate_thd_sentence(8)
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
                     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
                     thd_sentence = thd_sentence + "\r\n"
                     thd_sentence = thd_sentence.encode("ascii")
                     _online_port.write(thd_sentence)
+                    print("speed set to 8% <=")
+
                     latitude, longitude = headingStandalone.extract_lat_lon(res)
                     heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                    print(" New heading set to ===>")
                     print(heading_calc)
-                    print(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2], "im here")
+                    # print(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2], "im here")
                     hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
                     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
                     hsc_sentence = hsc_sentence + "\r\n"

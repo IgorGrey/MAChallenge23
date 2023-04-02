@@ -1,0 +1,7 @@
+Add functionality for displaying: (either in console or as visualization)
+ - speed in knots
+ - heading and cross-track - numeric in meters
+ - distance to waypoint in meters
+
+Additional or as a main logic of thrust/heading change in relation to distance to waypoint (if statments):
+- use gps location instead to confirm arrival to waypoint (drop few deciaml places from both lat and lon to create area of arrival to the waypoint)
