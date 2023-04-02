@@ -57,7 +57,7 @@ heading_found = False
 waypoints = [50.845, -0.746623, 50.845498, -0.746619,
              50.845496, -0.745935, 50.845006, -0.745927,
              50.845475, -0.745747, 50.845278, -0.745642,
-             50.844937, -0.745483, 50.84491 -0.746166 ]
+             50.844937, -0.745483, 50.84491, -0.746166 ]
 waypoints.reverse()
 
 # $CCAPM,7,64,0,80*51
@@ -170,28 +170,42 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         #print(distance, "distance")
         
         # experiment1, trying to evoid agnle calc in loop
-        angle = None
-        
+        # angle = None
+        thd_sentence = generate_thd_hsc.generate_thd_sentence(7)
+        thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+        thd_sentence = thd_sentence + "\r\n"
+        thd_sentence = thd_sentence.encode("ascii")
+        _online_port.write(thd_sentence)
         if distance < 10:
-            thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
+            thd_sentence = generate_thd_hsc.generate_thd_sentence(7)
             thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
             thd_sentence = thd_sentence + "\r\n"
             thd_sentence = thd_sentence.encode("ascii")
             _online_port.write(thd_sentence)
 
-            
             # experiment1 cont
-            if  not anlge :
-                angle = angle_between_waypoints.angle_between_waypoints([(latitude, longitude), (waypoints[len(waypoints)-1], waypoints[len(waypoints)-2]), (waypoints[len(waypoints)-3], waypoints[len(waypoints)-4])])
-            print("Angle to the next waypoint calculated: ", angle, )
+            # if  not anlge :
+            # angle = angle_between_waypoints.angle_between_waypoints([(latitude, longitude), (waypoints[len(waypoints)-1], waypoints[len(waypoints)-2]), (waypoints[len(waypoints)-3], waypoints[len(waypoints)-4])])
+            # print("Angle to the next waypoint calculated: ", angle, )
             
-            if angle <= 90: 
-                thd_sentence = generate_thd_hsc.generate_hsc_sentence(17)
-                thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
-                thd_sentence = thd_sentence + "\r\n"
-                thd_sentence = thd_sentence.encode("ascii")
-                _online_port.write(thd_sentence)
-                if distance <= 2:
+            # if angle <= 90: 
+            #     thd_sentence = generate_thd_hsc.generate_hsc_sentence(17)
+            #     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+            #     thd_sentence = thd_sentence + "\r\n"
+            #     thd_sentence = thd_sentence.encode("ascii")
+            #     _online_port.write(thd_sentence)
+            if distance <= 7:
+                
+                heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                print(heading_calc, "Heading set to <==")
+                
+                hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+                hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+                hsc_sentence = hsc_sentence + "\r\n"
+                hsc_sentence = hsc_sentence.encode("ascii")
+                _online_port.write(hsc_sentence)
+                
+                if distance <= 3:
                     waypoints.pop()
                     waypoints.pop()
                     heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
@@ -203,29 +217,34 @@ def handle_found_sentence(sentence_num, nmea_sentence):
                     hsc_sentence = hsc_sentence.encode("ascii")
                     _online_port.write(hsc_sentence)
                     #time.sleep(10)
-                    thd_sentence = generate_thd_hsc.generate_thd_sentence(84)
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
                     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
                     thd_sentence = thd_sentence + "\r\n"
                     thd_sentence = thd_sentence.encode("ascii")
                     _online_port.write(thd_sentence)
-            else:
-                if distance < 10:
-                    waypoints.pop()
-                    waypoints.pop()
-                    heading_calc = headingFormula.calculate_heading(longitude, latitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
-                    print(heading_calc, "2")
-                    print("Reached waypoint")
-                    hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
-                    hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
-                    hsc_sentence = hsc_sentence + "\r\n"
-                    hsc_sentence = hsc_sentence.encode("ascii")
-                    _online_port.write(hsc_sentence)
-                    #time.sleep(5)
-                    thd_sentence = generate_thd_hsc.generate_thd_sentence(84)
-                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
-                    thd_sentence = thd_sentence + "\r\n"
-                    thd_sentence = thd_sentence.encode("ascii")
-                    _online_port.write(thd_sentence)
+                else:
+                    if distance >= 3:
+                        pass
+                    #  print("MISSED WAYPOINT!!!")
+
+
+                # if distance < 10:
+                #     waypoints.pop()
+                #     waypoints.pop()
+                #     heading_calc = headingFormula.calculate_heading(longitude, latitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                #     print(heading_calc, "2")
+                #     print("Reached waypoint")
+                #     hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+                #     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+                #     hsc_sentence = hsc_sentence + "\r\n"
+                #     hsc_sentence = hsc_sentence.encode("ascii")
+                #     _online_port.write(hsc_sentence)
+                #     #time.sleep(5)
+                #     thd_sentence = generate_thd_hsc.generate_thd_sentence(84)
+                #     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                #     thd_sentence = thd_sentence + "\r\n"
+                #     thd_sentence = thd_sentence.encode("ascii")
+                #     _online_port.write(thd_sentence)
 
 
             # elif angle < 90:
@@ -266,7 +285,7 @@ def setup_input_console(port="COM5"):
                     # lon = float(gprmc_var[5])
                     # lon= (lon/100)
                     # longitude = -(lonconverter.convert_minutes_to_degrees(lon))
-                    thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(-17)
                     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
                     thd_sentence = thd_sentence + "\r\n"
                     thd_sentence = thd_sentence.encode("ascii")
@@ -282,6 +301,12 @@ def setup_input_console(port="COM5"):
                     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
                     hsc_sentence = hsc_sentence + "\r\n"
                     hsc_sentence = hsc_sentence.encode("ascii")
+
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
+                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                    thd_sentence = thd_sentence + "\r\n"
+                    thd_sentence = thd_sentence.encode("ascii")
+                    _online_port.write(thd_sentence)
 
                     print(hsc_sentence)
                     _online_port.write(hsc_sentence)
