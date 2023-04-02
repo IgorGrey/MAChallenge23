@@ -1,6 +1,6 @@
 import math
 
-def calculate_heading(lat2, lon2, lat1, lon1):
+def calculate_heading(lat1, lon1, lat2, lon2):
     # Convert latitude and longitude to radians
     lat1 = math.radians(lat1)
     lon1 = math.radians(lon1)

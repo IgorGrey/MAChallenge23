@@ -16,6 +16,7 @@ import calculateSpeed
 import distanceFormula
 import lonconverter
 import latconverter
+import headingStandalone
 
 _LOG_FILE = "script_log.log"
 _LOG_TIME_FORMAT = "%Y-%m-%D %H:%M:%S"
@@ -43,17 +44,20 @@ heading_found = False
 #              50.50732394, -000.44738794, 50.50710799, -000.44798794,
 #              50.50710799, -000.44721691, 50.50732397, -000.44721691,
 #              50.50732397, -000.44704588, 50.50710799, -000.44704588]
-waypoints = [50.84517998333334 ,-0.7459316166666666,
-            50.84553995 ,-0.7459316166666666,
-            50.8455399 ,-0.7456465666666666,
-            50.84517998333334 ,-0.7466465666666667,
-            50.84517998333334 ,-0.7453615166666666,
-            50.84553995 ,-0.7453615166666666,
-            50.84553995,-0.7450764666666667,
-            50.84517998333334 ,-0.7450764666666667]
+# waypoints = [50.84517998333334 ,-0.7459316166666666,
+#             50.84553995 ,-0.7459316166666666,
+#             50.8455399 ,-0.7456465666666666,
+#             50.84517998333334 ,-0.7466465666666667, 
+#             50.84517998333334 ,-0.7453615166666666,
+#             50.84553995 ,-0.7453615166666666,
+#             50.84553995,-0.7450764666666667,
+#             50.84517998333334 ,-0.7450764666666667]
             #try to reverse the list manually and get them by them one 
             # becuase it is 
-
+waypoints = [50.845, -0.746623, 50.845498, -0.746619,
+             50.845496, -0.745935, 50.845006, -0.745927,
+             50.845475, -0.745747, 50.845278, -0.745642,
+             50.844937, -0.745483, 50.84491 -0.746166 ]
 waypoints.reverse()
 
 # $CCAPM,7,64,0,80*51
@@ -143,21 +147,23 @@ _online_port = ports_module.connect_to_port("COM5")
 def handle_found_sentence(sentence_num, nmea_sentence):
      if sentence_num == 0 :
 # # ['$GPRMC', '000305.53', 'A', '5050.699892', 'N', '00044.772998', 'W', '0.0', '0.0', '230418', '4.0', 'W', 'A', 'S*4D']
-        gprmc_var = nmea_sentence.split(",")
-        timestamp = gprmc_var[1]
-        lat = float(gprmc_var[3])
-        lat = (lat/100)
+        # gprmc_var = nmea_sentence.split(",")
+        # timestamp = gprmc_var[1]
+        # lat = float(gprmc_var[3])
+        # lat = (lat/100)
 
-        latitude = latconverter.convert_minutes_to_degrees(lat)
+        # latitude = latconverter.convert_minutes_to_degrees(lat)
         
-        lon = float(gprmc_var[5])
-        lon = (lon/100)
+        # lon = float(gprmc_var[5])
+        # lon = (lon/100)
         
-        longitude = -(lonconverter.convert_minutes_to_degrees(lon))
+        # longitude = -(lonconverter.convert_minutes_to_degrees(lon))
     
-        heading_dir = gprmc_var[11]
-        distance = distanceFormula.calculate_distance(latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
+        # heading_dir = gprmc_var[11]
+        latitude,longitude = headingStandalone.extract_lat_lon(nmea_sentence)
         
+        distance = distanceFormula.calculate_distance(latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
+        print(distance)
         #print( latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
         #print(distance, "distance")
 
@@ -242,13 +248,14 @@ def setup_input_console(port="COM5"):
             res = _online_port.readline().decode()
             if res:
                 if res.startswith("$" + "GPRMC") and i == 1:
-                    gprmc_var = res.split(",")
-                    lat = float(gprmc_var[3])
-                    lat = (lat/100)
-                    latitude = latconverter.convert_minutes_to_degrees(lat)
-                    lon = float(gprmc_var[5])
-                    lon= (lon/100)
-                    longitude = -(lonconverter.convert_minutes_to_degrees(lon))
+                    # gprmc_var = res.split(",")
+                    # lat = float(gprmc_var[3])
+                    # lat = (lat/100)
+                    # latitude = latconverter.convert_minutes_to_degrees(lat)
+                    # lon = float(gprmc_var[5])
+                    # lon= (lon/100)
+                    # longitude = -(lonconverter.convert_minutes_to_degrees(lon))
+                    latitude, longitude = headingStandalone.extract_lat_lon(res)
                     heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
                     print(heading_calc)
                     print(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2], "im here")
