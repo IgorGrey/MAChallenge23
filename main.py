@@ -171,11 +171,12 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         
         # experiment1, trying to evoid agnle calc in loop
         # angle = None
-        thd_sentence = generate_thd_hsc.generate_thd_sentence(7)
-        thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
-        thd_sentence = thd_sentence + "\r\n"
-        thd_sentence = thd_sentence.encode("ascii")
-        _online_port.write(thd_sentence)
+        heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])        
+        hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+        hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+        hsc_sentence = hsc_sentence + "\r\n"
+        hsc_sentence = hsc_sentence.encode("ascii")
+        _online_port.write(hsc_sentence)
         if distance < 10:
             thd_sentence = generate_thd_hsc.generate_thd_sentence(7)
             thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
