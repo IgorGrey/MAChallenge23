@@ -176,7 +176,7 @@ def handle_found_sentence(sentence_num, nmea_sentence):
             angle = angle_between_waypoints.angle_between_waypoints([(latitude, longitude), (waypoints[len(waypoints)-1], waypoints[len(waypoints)-2]), (waypoints[len(waypoints)-3], waypoints[len(waypoints)-4])])
             #print(heading_calc, "0")
             if angle <= 90: 
-                thd_sentence = generate_thd_hsc.generate_hsc_sentence(1)
+                thd_sentence = generate_thd_hsc.generate_hsc_sentence(17)
                 thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
                 thd_sentence = thd_sentence + "\r\n"
                 thd_sentence = thd_sentence.encode("ascii")
@@ -192,7 +192,7 @@ def handle_found_sentence(sentence_num, nmea_sentence):
                     hsc_sentence = hsc_sentence + "\r\n"
                     hsc_sentence = hsc_sentence.encode("ascii")
                     _online_port.write(hsc_sentence)
-                    time.sleep(10)
+                    #time.sleep(10)
                     thd_sentence = generate_thd_hsc.generate_thd_sentence(84)
                     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
                     thd_sentence = thd_sentence + "\r\n"
@@ -210,7 +210,7 @@ def handle_found_sentence(sentence_num, nmea_sentence):
                     hsc_sentence = hsc_sentence + "\r\n"
                     hsc_sentence = hsc_sentence.encode("ascii")
                     _online_port.write(hsc_sentence)
-                    time.sleep(5)
+                    #time.sleep(5)
                     thd_sentence = generate_thd_hsc.generate_thd_sentence(84)
                     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
                     thd_sentence = thd_sentence + "\r\n"
@@ -237,7 +237,8 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         # index = index + "*" + calculate_checksum(index)
         # index = f"{index}\r\n".encode("ascii")
         # _online_port.write(new_cmd)
-
+                    
+        # Create new function for rmc to opencpn
         send_cmd(nmea_sentence.encode("ascii"))
 
 
@@ -255,6 +256,11 @@ def setup_input_console(port="COM5"):
                     # lon = float(gprmc_var[5])
                     # lon= (lon/100)
                     # longitude = -(lonconverter.convert_minutes_to_degrees(lon))
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(8)
+                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                    thd_sentence = thd_sentence + "\r\n"
+                    thd_sentence = thd_sentence.encode("ascii")
+                    _online_port.write(thd_sentence)
                     latitude, longitude = headingStandalone.extract_lat_lon(res)
                     heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
                     print(heading_calc)
@@ -263,6 +269,7 @@ def setup_input_console(port="COM5"):
                     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
                     hsc_sentence = hsc_sentence + "\r\n"
                     hsc_sentence = hsc_sentence.encode("ascii")
+
                     print(hsc_sentence)
                     _online_port.write(hsc_sentence)
                     print("Init")
