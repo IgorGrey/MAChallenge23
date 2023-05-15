@@ -6,7 +6,8 @@ def generateOffset(lat1, lon1, shift, heading):
     count = 0
     waypoints = []
     print(f"""Obstacle at: Lat: {lat1}\nLong {lon1}\nGenerating New Waypoints with an offset of {shift}\n
-          Approaching at a heading of {heading}""")
+          Approaching at a heading of {heading}""") 
+    # Needs explanation on funcionality of the loop
     for azi in [180, 225, 270, 315, 0]:
         newHeading = heading - azi
         if newHeading >= 360:
@@ -31,4 +32,4 @@ if __name__ == "__main__":
     lat1 = 50.8449
     lon1 = -0.74621
 
-generateOffset(50.8449, -0.74621, 20,180)
+generateOffset(50.8449, -0.74621, 20,350)

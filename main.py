@@ -17,13 +17,10 @@ import distanceFormula
 import lonconverter
 import latconverter
 import headingStandalone
+import object_avoidance
 
 # import pyais automatic identification system 
 # json config file
-#  
-
-_LOG_FILE = "script_log.log"
-_LOG_TIME_FORMAT = "%Y-%m-%D %H:%M:%S"
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 2947
@@ -44,6 +41,9 @@ waypoints = [50.845, -0.746623, 50.845498, -0.746619,
              50.845475, -0.745747, 50.845278, -0.745642,
              50.844937, -0.745483, 50.84491, -0.746166 ]
 waypoints.reverse()
+
+# Logic: [lat1, lon1, lat2, lon2]
+obsticles = []
 
 def calculate_checksum(sentence):
     checksum = 0
@@ -84,6 +84,16 @@ def check_input_sentence(nmea_sentence):
 
     return nmea_sentence
 
+def check_obsticle_distance(cur_lat, cur_lon):
+    for loc in range(len(obsticles), 2):
+        ship_obj_distance = distanceFormula.calculate_distance(cur_lat, cur_lon, obsticles[loc], obsticles[loc+1])
+
+        if ship_obj_distance < 20:
+            return True
+
+    return False
+
+
 # IMPORTANT! Add which command you want to extract
 input_list_of_cmds = {0: "GPRMC", 1: "THD...", 2: "OBST", 3: "BRTH", 4: "POLL", 5: "OBJT"}
 listening_list_of_cmds = ["$GPRMC",]
@@ -103,6 +113,18 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         hsc_sentence = hsc_sentence.encode("ascii")
         print("The heading is:", round(heading_calc, 0), " Distance to the next waypoint:",distance,"meters.")
         _online_port.write(hsc_sentence)
+
+        # TODO, ensure that this function is triggered once until the waypoint is complited
+        if check_obsticle_distance(latitude, longitude):
+            pass
+        #  Check all obsticles and calculate their distances DONE
+        # if Obsticle in range of 20 meters away trigger function DONE
+        # Calculate the angle that is safe to avoid the obsticle
+        # put waypoint in the distance 20 minutes away with the previously calculated angle
+        # add the waypoint as the first (current) point to head to
+        new_lat, new_lon = 0, 0
+        waypoints.append(new_lat, new_lon)
+
         if distance <= 15:
             thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
             thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
