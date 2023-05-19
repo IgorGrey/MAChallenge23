@@ -100,9 +100,13 @@ listening_list_of_cmds = ["$GPRMC",]
 
 _online_port = ports_module.connect_to_port("COM5")
 # IMPORTANT this is where the command of interest is passed to
+
+current_mode = 0
+
 def handle_found_sentence(sentence_num, nmea_sentence):
-     if sentence_num == 0:
-        latitude,longitude = headingStandalone.extract_lat_lon(nmea_sentence)
+    if sentence_num == 0 and current_mode == 0:
+
+        latitude, longitude = headingStandalone.extract_lat_lon(nmea_sentence)
         
         distance = distanceFormula.calculate_distance(latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
         
@@ -117,6 +121,7 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         # TODO, ensure that this function is triggered once until the waypoint is complited
         if check_obsticle_distance(latitude, longitude):
             pass
+
         #  Check all obsticles and calculate their distances DONE
         # if Obsticle in range of 20 meters away trigger function DONE
         # Calculate the angle that is safe to avoid the obsticle
@@ -163,6 +168,8 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         # Create new function for rmc to opencpn
         send_cmd(nmea_sentence.encode("ascii"))
 
+    elif current_mode == 4:
+        print("Mode 4 on")
 
 def setup_input_console(port="COM5"):
     def handle_reponses():
@@ -224,6 +231,8 @@ def setup_input_console(port="COM5"):
             new_cmd = input("Enter a command:")
             if new_cmd[:4] == input_list_of_cmds[2] or new_cmd[:4] == input_list_of_cmds[3] or new_cmd[:4] == input_list_of_cmds[4] or new_cmd[:4] == input_list_of_cmds[5]:
                 pass
+            elif new_cmd == "Mode4":
+                current_mode = 4
             else:
                 checksum = calculate_checksum(new_cmd[1:])
                 new_cmd = new_cmd + "*" +  checksum

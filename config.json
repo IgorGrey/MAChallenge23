@@ -1,0 +1,8 @@
+{
+    "distance": {
+        "obsticle": 21,
+        "waypoint_aware": 15,
+        "waypoint_engines_slow": 7,
+        "waypoint_change_direction": 3
+    }
+}
