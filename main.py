@@ -98,12 +98,12 @@ def check_obsticle_distance(cur_lat, cur_lon):
 input_list_of_cmds = {0: "GPRMC", 1: "THD...", 2: "OBST", 3: "BRTH", 4: "POLL", 5: "OBJT"}
 listening_list_of_cmds = ["$GPRMC",]
 
-_online_port = ports_module.connect_to_port("COM5")
 # IMPORTANT this is where the command of interest is passed to
 
 current_mode = 0
 
 def handle_found_sentence(sentence_num, nmea_sentence):
+    _online_port = ports_module.connect_to_port("COM5")
     if sentence_num == 0 and current_mode == 0:
 
         latitude, longitude = headingStandalone.extract_lat_lon(nmea_sentence)
@@ -172,6 +172,7 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         print("Mode 4 on")
 
 def setup_input_console(port="COM5"):
+    _online_port = ports_module.connect_to_port("COM5")
     def handle_reponses():
         i = 1
         while True:
