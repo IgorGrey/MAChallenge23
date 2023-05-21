@@ -67,9 +67,10 @@ def calculate_heading(current_lat, current_lon, target_lat, target_lon):
     return heading_deg
 
 # Example usage
-nmea_sentence = "$MMWPL,5050.710799,N,00044.755897,W,WPT 1*73"
-current_lat, current_lon = 50.845000, -0.746217
-target_lat, target_lon = extract_lat_lon_from_wpl(nmea_sentence)
-print(target_lat,target_lon)
-heading = calculate_heading(target_lat, target_lon, current_lat, current_lon)
-print(f"Heading: {heading:.2f} degrees")
+if __name__ == "__main__":
+    nmea_sentence = "$MMWPL,5050.710799,N,00044.755897,W,WPT 1*73"
+    current_lat, current_lon = 50.845000, -0.746217
+    target_lat, target_lon = extract_lat_lon_from_wpl(nmea_sentence)
+    print(target_lat,target_lon)
+    heading = calculate_heading(target_lat, target_lon, current_lat, current_lon)
+    print(f"Heading: {heading:.2f} degrees")

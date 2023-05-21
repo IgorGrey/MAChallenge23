@@ -1,23 +1,23 @@
-import serial
+# import serial
 import socket
 import ports_module 
-import subprocess
+# import subprocess
 import threading
-import re
-import logging
+# import re
+# import logging
 # import nmea_cmds
 import pynmea2
 from datetime import datetime
-import time
+# import time
 import headingFormula
 import generate_thd_hsc
-import angle_between_waypoints
-import calculateSpeed
+# import angle_between_waypoints
+# import calculateSpeed
 import distanceFormula
-import lonconverter
-import latconverter
+# import lonconverter
+# import latconverter
 import headingStandalone
-import object_avoidance
+# import object_avoidance
 
 # import pyais automatic identification system 
 # json config file
@@ -98,10 +98,10 @@ def check_obsticle_distance(cur_lat, cur_lon):
 input_list_of_cmds = {0: "GPRMC", 1: "THD...", 2: "OBST", 3: "BRTH", 4: "POLL", 5: "OBJT"}
 listening_list_of_cmds = ["$GPRMC",]
 
-_online_port = ports_module.connect_to_port("COM5")
 # IMPORTANT this is where the command of interest is passed to
 def handle_found_sentence(sentence_num, nmea_sentence):
-     if sentence_num == 0:
+    _online_port = ports_module.connect_to_port("COM5")
+    if sentence_num == 0:
         latitude,longitude = headingStandalone.extract_lat_lon(nmea_sentence)
         
         distance = distanceFormula.calculate_distance(latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
@@ -165,6 +165,7 @@ def handle_found_sentence(sentence_num, nmea_sentence):
 
 
 def setup_input_console(port="COM5"):
+    _online_port = ports_module.connect_to_port("COM5")
     def handle_reponses():
         i = 1
         while True:
@@ -267,6 +268,7 @@ def start_program():
             listening_console_thread.start()
         else:
             print(f"Option not available {mode_choice}")
+            exit()
     
 
     except OSError as oe:
