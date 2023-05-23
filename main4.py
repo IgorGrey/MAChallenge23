@@ -12,6 +12,9 @@ import main1
 SERVER_ADDR = "127.0.0.1"
 SERVER_PORT = 49699
 
+is_in_plume = False
+plume_iter = 0
+
 # TODO: create json with config for threshold of pollution
 THRESHOLD = 12
 
@@ -53,9 +56,7 @@ def take_90_degrees_right_turn():
 
 # This is where we do the Igor's algorithm, we have the info we need at the interval of 1 second
 
-IS_IN_PLUME = False 
-PLUME_ITER = 0
-def algo_challenge4(sig_cmd, rmc_cmd):
+def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, plume_iter):
     def set_true_in_plume():
         is_in_plume = True
 
@@ -63,17 +64,17 @@ def algo_challenge4(sig_cmd, rmc_cmd):
         is_in_plume = False
 
     print(sig_cmd, rmc_cmd)
-    if IS_IN_PLUME:
-        if sig_cmd < THRESHOLD:
+    if is_in_plume:
+        if float(sig_cmd) < THRESHOLD:
             print("Left Plume", rmc_cmd[0], rmc_cmd[1], rmc_cmd[2], rmc_cmd[3])
-            IS_IN_PLUME = False
-            if PLUME_ITER > 0:
+            is_in_plume = False
+            if plume_iter > 0:
                 # Take a turn
                 take_90_degrees_right_turn()
-            PLUME_ITER += 1
+            plume_iter += 1
 
 
-    elif sig_cmd > THRESHOLD:
+    elif float(sig_cmd) > THRESHOLD:
         print("Entered plume", rmc_cmd[0], rmc_cmd[1], rmc_cmd[2], rmc_cmd[3])
         is_in_plume = True
 
@@ -114,7 +115,7 @@ def start_search():
         if data_decoded.startswith("$DYSIG"):
             pollution_level = get_pollution_level_from_DYSIG(data_decoded)
             rmc_coords = get_location_coordinates(previous_cmd)
-            algo_challenge4(pollution_level, rmc_coords)
+            algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter)
             write_to_log(pollution_level, rmc_coords)
         # get the most recent RMC command
         else:
