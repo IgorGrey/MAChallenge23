@@ -17,6 +17,8 @@ SERVER_PORT = 49699
 # TODO: make sure the ship takes turn first, then makes decision
 # This is to avoid the ship to start 150 degree turn to catch plume and 
 # begin to catch plume again and start 30 degree turn
+# TODO: when we enter plume, add some mechanism to prevent slightly lower value 
+# to be registered in the next sentence activating next part of the code
 THRESHOLD = 28
 
 
@@ -28,12 +30,14 @@ def send_cmd_to_system(cmd):
     res = _online_port.readline().decode()
     print(res)
 
+
 def write_to_log(sig_cmd, rmc_cmd):
     with open("./challenge4.log", "a+") as file:
         time = datetime.now()
         timestamp = time.strftime("%H:%M:%S")
         log_entry = f"{timestamp}: {rmc_cmd[0]}{rmc_cmd[1]}  {rmc_cmd[2]}{rmc_cmd[3]}  {sig_cmd}%"
         file.write(log_entry + "\n")
+
 
 def get_pollution_level_from_DYSIG(cmd):
     # print(cmd.split(",")[1].split("*")[0])
@@ -44,6 +48,9 @@ def get_location_coordinates(cmd):
     # TODO: fix return [sentence[3], sentence[4], sentence[5], sentence[6]]
     sentence = cmd.split(",")
     # [3] [4] [5] [6]
+    if float(sentence[5]) < 00044.764329:
+        take_90_degrees_right_turn(4)
+    print(sentence[5])
     return [sentence[3], sentence[4], sentence[5], sentence[6]]
 
 
@@ -60,9 +67,12 @@ def reset_heading():
 def take_90_degrees_right_turn(plume_iter):
     # $CCHSC,210.00,T,210.00,M
     print("Taking turn")
+    if plume_iter == 0 or plume_iter == 1:
+        turn_value = 90
+    elif plume_iter == 4:
+        turn_value = 180
 
-
-    hsc_sentence = generate_thd_hsc.generate_hsc_sentence(150)
+    hsc_sentence = generate_thd_hsc.generate_hsc_sentence(turn_value)
     hsc_sentence = hsc_sentence + "*" + main1.calculate_checksum(hsc_sentence[1:])
     hsc_sentence = hsc_sentence + "\r\n"
     hsc_sentence = hsc_sentence.encode("ascii")
@@ -72,12 +82,6 @@ def take_90_degrees_right_turn(plume_iter):
 # This is where we do the Igor's algorithm, we have the info we need at the interval of 1 second
 
 def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, plume_iter):
-    # def set_true_in_plume():
-    #     is_in_plume = True
-
-    # def set_false_in_plume():
-    #     is_in_plume = False
-
     print(is_in_plume)
     print(sig_cmd, rmc_cmd)
     if is_in_plume:
