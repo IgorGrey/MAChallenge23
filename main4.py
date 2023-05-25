@@ -61,10 +61,13 @@ def get_pollution_level_from_DYSIG(cmd):
 def get_location_coordinates(cmd):
     # TODO: fix return [sentence[3], sentence[4], sentence[5], sentence[6]]
     sentence = cmd.split(",")
-    if float(sentence[5]) < 00044.764329:
-        take_90_degrees_right_turn(4)
-    print(sentence[5])
-    return [sentence[3], sentence[4], sentence[5], sentence[6]]
+    if sentence[0] == "$GPRMC":
+        if float(sentence[5]) < 00044.764329:
+            take_90_degrees_right_turn(4)
+        print(sentence[5])
+        return [sentence[3], sentence[4], sentence[5], sentence[6]]
+    else:
+        return 0
 
 
 def reset_heading():
@@ -155,8 +158,15 @@ def start_search():
         if data_decoded.startswith("$DYSIG"):
             pollution_level = get_pollution_level_from_DYSIG(data_decoded)
             rmc_coords = get_location_coordinates(previous_cmd)
-            is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
-            write_to_log(pollution_level, rmc_coords)
+
+            # Prevent incorrect DYSIG or GPRMC commands to get through
+            if pollution_level and rmc_coords:
+                is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
+                write_to_log(pollution_level, rmc_coords)
+
+            else:
+                print("Caught incorrect DYSIG or GPRMC")
+                print(pollution_level, "\n", rmc_coords)
         # get the most recent RMC command
         else:
             previous_cmd = data_decoded
