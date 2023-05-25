@@ -8,21 +8,35 @@ import generate_thd_hsc
 import distanceFormula
 import headingStandalone
 import main1
+import json
 
 SERVER_ADDR = "127.0.0.1"
 SERVER_PORT = 49699
 
 
-# TODO: create json with config for threshold of pollution
+# TODO: create json with config for threshold of pollution, completed
 # TODO: make sure the ship takes turn first, then makes decision
 # This is to avoid the ship to start 150 degree turn to catch plume and 
 # begin to catch plume again and start 30 degree turn
 # TODO: when we enter plume, add some mechanism to prevent slightly lower value 
-# to be registered in the next sentence activating next part of the code
-THRESHOLD = 28
-
+# to be registered in the next sentence activating next part of the code, completed
 
 # $CCTHD,85.00,0.00,0.00,0.00,0.00,85.00,0.00,0.00
+
+with open("config.json", "r") as config_file:
+    config = config_file.read()
+    config = json.loads(config)
+
+# class json():
+#     def __init__(self):
+#         with open("config.json", "r") as config_file:
+#             self.config = config_file.open()
+    
+#     def get_const(category, subcategory, self):
+#         try:
+#             return self.config[category][subcategory]
+#         except Exception as e:
+#             print("Failed to get resutls from json")
 
 def send_cmd_to_system(cmd):
     _online_port = ports_module.connect_to_port("COM5")
@@ -47,7 +61,6 @@ def get_pollution_level_from_DYSIG(cmd):
 def get_location_coordinates(cmd):
     # TODO: fix return [sentence[3], sentence[4], sentence[5], sentence[6]]
     sentence = cmd.split(",")
-    # [3] [4] [5] [6]
     if float(sentence[5]) < 00044.764329:
         take_90_degrees_right_turn(4)
     print(sentence[5])
@@ -81,11 +94,11 @@ def take_90_degrees_right_turn(plume_iter):
 
 # This is where we do the Igor's algorithm, we have the info we need at the interval of 1 second
 
-def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, plume_iter):
+def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, plume_iter, new_plume_sequence):
     print(is_in_plume)
     print(sig_cmd, rmc_cmd)
-    if is_in_plume:
-        if float(sig_cmd) < THRESHOLD:
+    if is_in_plume and new_plume_sequence == 0:
+        if float(sig_cmd) < config["chal4"]["threshold"]:
             print("Left Plume", rmc_cmd[0], rmc_cmd[1], rmc_cmd[2], rmc_cmd[3])
             is_in_plume = False
             # if plume_iter > 0:
@@ -93,21 +106,22 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, plume_iter):
             take_90_degrees_right_turn(plume_iter)
             plume_iter += 1
 
+    elif new_plume_sequence > 0:
+        print("new plume sequence", new_plume_sequence)
+        new_plume_sequence -= 1 
 
-    elif float(sig_cmd) > THRESHOLD:
+    elif float(sig_cmd) > config["chal4"]["threshold"]:
         print("Entered plume", rmc_cmd[0], rmc_cmd[1], rmc_cmd[2], rmc_cmd[3])
         is_in_plume = True
+        new_plume_sequence = config["chal4"]["new_plume_sequence"]
     
-    return is_in_plume, plume_iter
+    return is_in_plume, plume_iter, new_plume_sequence
 
 
 def start_search():
-    # main1.send_cmd(cmd)
-    # main1.calculate_checksum(sentence)
-    # main1.check_obsticle_distance(cur_lat, cur_lon)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    sock.connect((SERVER_ADDR, SERVER_PORT))
+    sock.connect((config["general"]["server_addr"], config["general"]["server_tcp_port"]))
 
     print("Starting the challenge")
     print("Setting forward thrust")
@@ -131,6 +145,7 @@ def start_search():
     previous_cmd = ""
     is_in_plume = False
     plume_iter = 0
+    new_plume_sequence = 0
 
     while True:
         # reset_heading()
@@ -140,7 +155,7 @@ def start_search():
         if data_decoded.startswith("$DYSIG"):
             pollution_level = get_pollution_level_from_DYSIG(data_decoded)
             rmc_coords = get_location_coordinates(previous_cmd)
-            is_in_plume, plume_iter = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter)
+            is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
             write_to_log(pollution_level, rmc_coords)
         # get the most recent RMC command
         else:

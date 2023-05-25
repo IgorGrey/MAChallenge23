@@ -1,0 +1,29 @@
+{
+    "chal1": {
+        "notice_distance": 15,
+        "slowdown_distance": 7,
+        "turn_distance": 3
+    }, 
+
+    "chal2": {
+        "param2": "param"
+    },
+
+    "chal3": {
+        "param3": "param"
+    },
+
+    "chal4": {
+        "threshold": 28,
+        "new_plume_sequence": 3
+    },
+
+    "chal5": {
+        "param4": "param"
+    },
+    "general": {
+        "server_addr": "127.0.0.1",
+        "server_tcp_port": 49699,
+        "opencpn_udp_port": 2947
+    }
+}
