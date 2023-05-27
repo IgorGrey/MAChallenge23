@@ -17,10 +17,13 @@ import distanceFormula
 # import lonconverter
 # import latconverter
 import headingStandalone
-# import object_avoidance
+import json
 
 # import pyais automatic identification system 
 # json config file
+with open("config.json", "r") as config_file:
+    config = config_file.read()
+    config = json.loads(config)
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 2947
@@ -30,7 +33,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 def send_cmd(cmd):
     # new_cmd = f"{cmd}\r\n".encode("ascii")
     # new_cmd = "$GPRMC,001115.81,A,5050.700849,N,00044.822914,W,0.0,269.7,230418,4.0,W,A,S*43"
-    sock.sendto(cmd, (UDP_IP, UDP_PORT))
+    sock.sendto(cmd, (config["general"]["server_addr"], config["general"]["opencpn_udp_port"]))
 
 
 # LOGIC: [lat1, lon1, lat2, lon2,...]
@@ -172,6 +175,7 @@ def setup_input_console(port="COM5"):
             res = _online_port.readline().decode()
             if res:
                 if res.startswith("$" + "GPRMC") and i == 1:
+                    # Created to reverse because the setup is for the shipSim should be changed!!!!!!!!!!!!
                     thd_sentence = generate_thd_hsc.generate_thd_sentence(-17)
                     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
                     thd_sentence = thd_sentence + "\r\n"
@@ -179,7 +183,7 @@ def setup_input_console(port="COM5"):
                     _online_port.write(thd_sentence)
                     print(thd_sentence)
                     print("speed set to 8% <=")
-
+                
                     latitude, longitude = headingStandalone.extract_lat_lon(res)
                     heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
                     print(" New heading set to ===>")
@@ -200,7 +204,6 @@ def setup_input_console(port="COM5"):
                     _online_port.write(hsc_sentence)
                     print("Init")
                     i = 0
-
 
             for key, value in input_list_of_cmds.items():
                     if res.startswith("$" + value):

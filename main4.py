@@ -10,10 +10,6 @@ import headingStandalone
 import main1
 import json
 
-SERVER_ADDR = "127.0.0.1"
-SERVER_PORT = 49699
-
-
 # TODO: create json with config for threshold of pollution, completed
 # TODO: make sure the ship takes turn first, then makes decision
 # This is to avoid the ship to start 150 degree turn to catch plume and 
