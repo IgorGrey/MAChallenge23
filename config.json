@@ -15,7 +15,8 @@
 
     "chal4": {
         "threshold": 28,
-        "new_plume_sequence": 3
+        "new_plume_sequence": 3,
+        "plume_explore_speed": 20
     },
 
     "chal5": {

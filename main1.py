@@ -11,7 +11,7 @@ from datetime import datetime
 # import time
 import headingFormula
 import generate_thd_hsc
-# import angle_between_waypoints
+import angle_between_waypoints
 # import calculateSpeed
 import distanceFormula
 # import lonconverter

@@ -23,16 +23,6 @@ with open("config.json", "r") as config_file:
     config = config_file.read()
     config = json.loads(config)
 
-# class json():
-#     def __init__(self):
-#         with open("config.json", "r") as config_file:
-#             self.config = config_file.open()
-    
-#     def get_const(category, subcategory, self):
-#         try:
-#             return self.config[category][subcategory]
-#         except Exception as e:
-#             print("Failed to get resutls from json")
 
 def send_cmd_to_system(cmd):
     _online_port = ports_module.connect_to_port("COM5")
@@ -55,8 +45,8 @@ def get_pollution_level_from_DYSIG(cmd):
 
 
 def get_location_coordinates(cmd):
-    # TODO: fix return [sentence[3], sentence[4], sentence[5], sentence[6]]
     sentence = cmd.split(",")
+    # Make sure the command is GPRMC
     if sentence[0] == "$GPRMC":
         if float(sentence[5]) < 00044.764329:
             take_90_degrees_right_turn(4)
@@ -75,6 +65,18 @@ def reset_heading():
     hsc_sentence = hsc_sentence.encode("ascii")
     send_cmd_to_system(hsc_sentence)
 
+
+# Declare empty list
+# After taking the first turn, save the coords into the list
+# CASE 1: If plume not found, keep checking the distance with the last item in the list
+#         If the distance met, start turning according to the rules
+# CASE 2: If length of the list is 4, take a different turn, Left? if we took Right         
+#         Clear the list
+# CASE 3: If plume found, clean the list and continue
+
+
+def take_turn_sequence():
+    pass
 
 def take_90_degrees_right_turn(plume_iter):
     # $CCHSC,210.00,T,210.00,M
@@ -134,7 +136,7 @@ def start_search():
     send_cmd_to_system(turn_on_cmd)
 
     # Start moving forward 20% thrust
-    fwd_sentence = generate_thd_hsc.generate_thd_sentence(20)
+    fwd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal4"]["plume_exploring_speed"])
     fwd_sentence = fwd_sentence + "*" + main1.calculate_checksum(fwd_sentence[1:])
     fwd_sentence = fwd_sentence + "\r\n"
     fwd_sentence = fwd_sentence.encode("ascii")
