@@ -55,6 +55,11 @@ def get_location_coordinates(cmd):
     else:
         return 0
 
+    
+def get_heading_degrees(cmd):
+    sentence = cmd.split(",")
+    # Ensure command is $CCFEC
+
 
 def reset_heading():
     # $CCHSC,0,T,210.00,M
@@ -136,14 +141,14 @@ def start_search():
     send_cmd_to_system(turn_on_cmd)
 
     # Start moving forward 20% thrust
-    fwd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal4"]["plume_exploring_speed"])
+    fwd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal4"]["plume_explore_speed"])
     fwd_sentence = fwd_sentence + "*" + main1.calculate_checksum(fwd_sentence[1:])
     fwd_sentence = fwd_sentence + "\r\n"
     fwd_sentence = fwd_sentence.encode("ascii")
     print(fwd_sentence)
     send_cmd_to_system(fwd_sentence)
 
-    previous_cmd = ""
+    heading_dir, rmc_coords = "", ""
     is_in_plume = False
     plume_iter = 0
     new_plume_sequence = 0
@@ -155,19 +160,21 @@ def start_search():
         data_decoded = tcp_data.decode('utf-8')
         if data_decoded.startswith("$DYSIG"):
             pollution_level = get_pollution_level_from_DYSIG(data_decoded)
-            rmc_coords = get_location_coordinates(previous_cmd)
 
             # Prevent incorrect DYSIG or GPRMC commands to get through
-            if pollution_level and rmc_coords:
+            if pollution_level and rmc_coords and heading_dir:
                 is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
-                write_to_log(pollution_level, rmc_coords)
+                write_to_log(pollution_level, rmc_coords, heading_dir)
 
             else:
                 print("Caught incorrect DYSIG or GPRMC")
                 print(pollution_level, "\n", rmc_coords)
-        # get the most recent RMC command
-        else:
-            previous_cmd = data_decoded
+
+        elif data_decoded.startswith("$CCFEC"):
+            heading_dir = get_heading_degrees(data_decoded)
+
+        elif data_decoded.startswith("$GPRMC"):
+            rmc_coords = get_location_coordinates(data_decoded)
 
     sock.close()
 
