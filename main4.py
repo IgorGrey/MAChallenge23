@@ -31,11 +31,11 @@ def send_cmd_to_system(cmd):
     print(res)
 
 
-def write_to_log(sig_cmd, rmc_cmd):
+def write_to_log(sig_cmd, rmc_cmd, fec_cmd):
     with open("./challenge4.log", "a+") as file:
         time = datetime.now()
         timestamp = time.strftime("%H:%M:%S")
-        log_entry = f"{timestamp}: {rmc_cmd[0]}{rmc_cmd[1]}  {rmc_cmd[2]}{rmc_cmd[3]}  {sig_cmd}%"
+        log_entry = f"{timestamp}: {rmc_cmd[0]}{rmc_cmd[1]}  {rmc_cmd[2]}{rmc_cmd[3]}  {sig_cmd}% Heading Direction {fec_cmd}"
         file.write(log_entry + "\n")
 
 
@@ -46,6 +46,8 @@ def get_pollution_level_from_DYSIG(cmd):
 
 def get_location_coordinates(cmd):
     sentence = cmd.split(",")
+    # return [sentence[3], sentence[4], sentence[5], sentence[6]]
+
     # Make sure the command is GPRMC
     if sentence[0] == "$GPRMC":
         if float(sentence[5]) < 00044.764329:
@@ -58,7 +60,7 @@ def get_location_coordinates(cmd):
     
 def get_heading_degrees(cmd):
     sentence = cmd.split(",")
-    # Ensure command is $CCFEC
+    return sentence[1]
 
 
 def reset_heading():
@@ -101,8 +103,11 @@ def take_90_degrees_right_turn(plume_iter):
 # This is where we do the Igor's algorithm, we have the info we need at the interval of 1 second
 
 def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, plume_iter, new_plume_sequence):
-    print(is_in_plume)
-    print(sig_cmd, rmc_cmd)
+    # print(is_in_plume)
+    # print(sig_cmd, rmc_cmd)
+    time = datetime.now()
+    timestamp = time.strftime("%H:%M:%S")
+    print(timestamp)
     if is_in_plume and new_plume_sequence == 0:
         if float(sig_cmd) < config["chal4"]["threshold"]:
             print("Left Plume", rmc_cmd[0], rmc_cmd[1], rmc_cmd[2], rmc_cmd[3])
@@ -148,33 +153,43 @@ def start_search():
     print(fwd_sentence)
     send_cmd_to_system(fwd_sentence)
 
-    heading_dir, rmc_coords = "", ""
+    previous_cmd = ""
+    heading_dir = ""
     is_in_plume = False
     plume_iter = 0
     new_plume_sequence = 0
 
     while True:
+        # TODO: check if the logs update every second, possibly computer lagging?
+        # If we need to use multithreading, check ChatGPT solution, should work for this project
         # reset_heading()
         # Receive data from the server with buffer size
         tcp_data = sock.recv(1024)
         data_decoded = tcp_data.decode('utf-8')
         if data_decoded.startswith("$DYSIG"):
             pollution_level = get_pollution_level_from_DYSIG(data_decoded)
+            rmc_coords = get_location_coordinates(previous_cmd)
 
             # Prevent incorrect DYSIG or GPRMC commands to get through
-            if pollution_level and rmc_coords and heading_dir:
+            if pollution_level and rmc_coords:
                 is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
                 write_to_log(pollution_level, rmc_coords, heading_dir)
 
             else:
-                print("Caught incorrect DYSIG or GPRMC")
+                print("Caught incorrect DYSIG, GPRMC or CCFEC")
                 print(pollution_level, "\n", rmc_coords)
 
-        elif data_decoded.startswith("$CCFEC"):
-            heading_dir = get_heading_degrees(data_decoded)
+        # elif data_decoded.startswith("$GCHDM"):
+        #     heading_dir = get_heading_degrees(data_decoded)
 
-        elif data_decoded.startswith("$GPRMC"):
-            rmc_coords = get_location_coordinates(data_decoded)
+        # elif data_decoded.startswith("$GPRMC"):
+        #     rmc_coords = get_location_coordinates(data_decoded)
+
+        else:
+            time = datetime.now()
+            timestamp = time.strftime("%H:%M:%S")
+            # print(timestamp)
+            previous_cmd = data_decoded
 
     sock.close()
 
