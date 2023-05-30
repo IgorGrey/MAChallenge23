@@ -35,7 +35,7 @@ def write_to_log(sig_cmd, rmc_cmd, fec_cmd):
     with open("./challenge4.log", "a+") as file:
         time = datetime.now()
         timestamp = time.strftime("%H:%M:%S")
-        log_entry = f"{timestamp}: {rmc_cmd[0]}{rmc_cmd[1]}  {rmc_cmd[2]}{rmc_cmd[3]}  {sig_cmd}% Heading Direction {fec_cmd}"
+        log_entry = f"{timestamp}: {rmc_cmd[0]}{rmc_cmd[1]}  {rmc_cmd[2]}{rmc_cmd[3]}  {sig_cmd}% Heading Direction {flags_list[2]}"
         file.write(log_entry + "\n")
 
 
@@ -60,7 +60,7 @@ def get_location_coordinates(cmd):
     
 def get_heading_degrees(cmd):
     sentence = cmd.split(",")
-    return sentence[1]
+    return sentence[2]
 
 
 def reset_heading():
@@ -129,6 +129,8 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, plume_iter, new_plume_sequenc
     return is_in_plume, plume_iter, new_plume_sequence
 
 
+flags_list = ["$DYSIG", "$GPRMC", "$CCFEC"]
+
 def start_search():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -155,6 +157,7 @@ def start_search():
 
     previous_cmd = ""
     heading_dir = ""
+    rmc_coords = ""
     is_in_plume = False
     plume_iter = 0
     new_plume_sequence = 0
@@ -194,18 +197,61 @@ def start_search():
                 print(timestamp)
                 previous_cmd = data_decoded
 
-        def recieve_data():
+        # def handle_data(data):
+        #     print(data)
+
+
+        def recieve_SIG_RMC_data():
+            pollution_level = ""
+            is_in_plume = False
+            rmc_coords = ""
+            heading_dir = 0
+            plume_iter = ""
+            new_plume_sequence = 0
+
             while True:
+                tcp_data = sock.recv(1024)
+                data_decoded = tcp_data.decode('utf-8')
+
+                flag = data_decoded.split(",")[0]
+
+                if flag == "$GPRMC":
+                    gprmc_coords = data_decoded
+                
+                elif flag == "$DYSIG":
+                    pollution_level = get_pollution_level_from_DYSIG(data_decoded)
+                    rmc_coords = get_location_coordinates(gprmc_coords)
+                    is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
+                    write_to_log(pollution_level, rmc_coords, heading_dir)
+                
+                else:
+                    print("Caught incorrect DYSIG, GPRMC or CCFEC")
+                    print(pollution_level, "\n", rmc_coords)
+
+        def recieve_heading_data():
+            heading_dir = ""
+            while True:
+                tcp_data = sock.recv(1024)
+                data_decoded = tcp_data.decode("utf-8")
+                print(data_decoded)
+
+                flag = data_decoded.split(",")[0]
+
+                if flag == "$CCFEC":
+                    print("$CCFEC", flag)
+                    flags_list[2] = get_heading_degrees(data_decoded)
 
         def second_solution():
-            thread1 = threading.Thread(target=recieve_data)
+            thread1 = threading.Thread(target=recieve_SIG_RMC_data)
             thread1.start()
 
-            thread2 = threading.Thread(target=recieve_data)
-            thread2.start()
+            thread2 = threading.Thread(target=recieve_heading_data)
+            # thread2.start()
 
             thread1.join()
-            thread2.join()
+            # thread2.join()
+
+        second_solution()
 
     sock.close()
 
