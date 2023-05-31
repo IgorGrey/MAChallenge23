@@ -45,14 +45,13 @@ def get_pollution_level_from_DYSIG(cmd):
 
 def get_location_coordinates(cmd):
     sentence = cmd.split(",")
-    # return [sentence[3], sentence[4], sentence[5], sentence[6]]
 
     # Make sure the command is GPRMC
     if sentence[0] == "$GPRMC":
-        if float(sentence[5]) < 00044.764329:
-            take_90_degrees_right_turn(4)
+        # if float(sentence[5]) < 00044.764329:
+        #     take_90_degrees_right_turn(4)
         print(sentence[5])
-        return [sentence[3], sentence[4], sentence[5], sentence[6]]
+        return [sentence[3], sentence[4], sentence[5], sentence[6], sentence[8]]
     else:
         return 0
 
@@ -82,34 +81,59 @@ def reset_heading():
 
 
 # TODO: remove
-def take_90_degrees_right_turn(plume_iter):
-    # $CCHSC,210.00,T,210.00,M
-    print("Taking turn")
-    if plume_iter == 0 or plume_iter == 1:
-        turn_value = 90
-    elif plume_iter == 4:
-        turn_value = 180
+# def take_90_degrees_right_turn(plume_iter):
+#     # $CCHSC,210.00,T,210.00,M
+#     print("Taking turn")
+#     if plume_iter == 0 or plume_iter == 1:
+#         turn_value = 90
+#     elif plume_iter == 4:
+#         turn_value = 180
 
-    hsc_sentence = generate_thd_hsc.generate_hsc_sentence(turn_value)
+    # hsc_sentence = generate_thd_hsc.generate_hsc_sentence(turn_value)
+    # hsc_sentence = hsc_sentence + "*" + main1.calculate_checksum(hsc_sentence[1:])
+    # hsc_sentence = hsc_sentence + "\r\n"
+    # hsc_sentence = hsc_sentence.encode("ascii")
+    # print(hsc_sentence)
+    # send_cmd_to_system(hsc_sentence)
+
+# This is where we do the Igor's algorithm, we have the info we need at the interval of 1 second
+
+def calculate_within_360(value):
+    value %= 360
+    if value < 0:
+        value += 360
+    return value
+
+def make_turn(same_turn_count, turn_dir, current_heading):
+    # -1 always take left, 1 always take right
+    if turn_dir == -1:
+        current_heading = float(current_heading) - 90
+    elif turn_dir == 1:
+        current_heading = float(current_heading) + 90
+    
+    # After calculating heading, send it to the system as HSC
+    hsc_sentence = generate_thd_hsc.generate_hsc_sentence(current_heading)
     hsc_sentence = hsc_sentence + "*" + main1.calculate_checksum(hsc_sentence[1:])
     hsc_sentence = hsc_sentence + "\r\n"
     hsc_sentence = hsc_sentence.encode("ascii")
     print(hsc_sentence)
     send_cmd_to_system(hsc_sentence)
 
-# This is where we do the Igor's algorithm, we have the info we need at the interval of 1 second
 
-def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, plume_iter, new_plume_sequence):
+def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
+                    v_list, h_list, same_turn_count, turn_dir, last_exit_loc):
     # print(is_in_plume)
     # print(sig_cmd, rmc_cmd)
 
     # Leave plume sequence
     if is_in_plume and new_plume_sequence == 0:
         if float(sig_cmd) < config["chal4"]["threshold"]:
+            print("Exit")
             is_in_plume = False
-
-            # take_90_degrees_right_turn(plume_iter)
-            plume_iter += 1
+            same_turn_count = 0
+            make_turn(same_turn_count, turn_dir, rmc_cmd[4])
+            last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
+            # turn_dir = -1
 
     # plume sequence jump prevention mechanism
     elif new_plume_sequence > 0:
@@ -118,11 +142,42 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, plume_iter, new_plume_sequenc
 
     # New plume found sequence
     elif float(sig_cmd) > config["chal4"]["threshold"]:
-        print("Entered plume", rmc_cmd[0], rmc_cmd[1], rmc_cmd[2], rmc_cmd[3])
+        # rmc_cmd = [55.4321, N, -3.432, W]
+        print("Entered plume", rmc_cmd[0], rmc_cmd[1], rmc_cmd[2], rmc_cmd[3], rmc_cmd[4])
         is_in_plume = True
+
+        # TODO: replace same_turn_count with rmc_cmd[4] / 90
+        if same_turn_count == 2:
+            v_list = []
+
+        elif same_turn_count == 1 or same_turn_count == 3:
+            h_list = []
+
+        if same_turn_count == 0 or same_turn_count == 2:
+            v_list.append([sig_cmd, rmc_cmd[0], rmc_cmd[2]])
+
+        elif same_turn_count == 1 or same_turn_count == 3:
+            h_list.append([sig_cmd, rmc_cmd[0], rmc_cmd[2]])
+
         new_plume_sequence = config["chal4"]["new_plume_sequence"]
+
+    elif is_in_plume:
+        if same_turn_count == 0 or same_turn_count == 2:
+            v_list.append([sig_cmd, rmc_cmd[0], rmc_cmd[2]])
+
+        elif same_turn_count == 1 or same_turn_count == 3:
+            h_list.append([sig_cmd, rmc_cmd[0], rmc_cmd[2]])
+
+    elif not is_in_plume and last_exit_loc:
+        if distanceFormula.calculate_distance(float(rmc_cmd[0], float(rmc_cmd[2], float(last_exit_loc[-1][0]), float[-1][1]))) > 350:
+            same_turn_count += 1
+            make_turn(same_turn_count, turn_dir, rmc_cmd[4])
+
+    else:
+        if last_exit_loc:
+            print(distanceFormula.calculate_distance(float(rmc_cmd[0]), float(rmc_cmd[2]), float(last_exit_loc[-1][0]), float(last_exit_loc[-1][1])))
     
-    return is_in_plume, plume_iter, new_plume_sequence
+    return is_in_plume, new_plume_sequence, v_list, h_list, same_turn_count, turn_dir, last_exit_loc
 
 
 flags_list = ["$DYSIG", "$GPRMC", "$CCFEC"]
@@ -151,12 +206,11 @@ def start_search():
     print(fwd_sentence)
     send_cmd_to_system(fwd_sentence)
 
-    previous_cmd = ""
-    heading_dir = ""
-    rmc_coords = ""
-    is_in_plume = False
-    plume_iter = 0
-    new_plume_sequence = 0
+    # previous_cmd = ""
+    # heading_dir = ""
+    # rmc_coords = ""
+    # is_in_plume = False
+    # new_plume_sequence = 0
 
     # while True:
     #     # TODO: check if the logs update every second, possibly computer lagging?
@@ -198,23 +252,29 @@ def start_search():
         is_in_plume = False
         rmc_coords = ""
         heading_dir = 0
-        plume_iter = ""
         new_plume_sequence = 0
+        v_list, h_list = [], []
+        same_turn_count, turn_dir = 0, 1
+        last_exit_loc = []
 
         print("Connecting to the server")
         while True:
             tcp_data = sock.recv(1024)
             data_decoded = tcp_data.decode('utf-8')
 
+            # reset_heading()
             flag = data_decoded.split(",")[0]
 
             if flag == "$GPRMC":
                 gprmc_coords = data_decoded
             
-            elif flag == "$DYSIG":
+            # TODO: gprmc_coords referenced before assignment
+            elif flag == "$DYSIG" and gprmc_coords:
+                print("DYSIG")
                 pollution_level = get_pollution_level_from_DYSIG(data_decoded)
                 rmc_coords = get_location_coordinates(gprmc_coords)
-                is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
+                is_in_plume, new_plume_sequence, v_list, h_list, same_turn_count, turn_dir, last_exit_loc = algo_challenge4(pollution_level, rmc_coords,
+                    is_in_plume, new_plume_sequence, v_list, h_list, same_turn_count, turn_dir, last_exit_loc)
                 write_to_log(pollution_level, rmc_coords, heading_dir)
             
             else:
