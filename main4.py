@@ -40,7 +40,6 @@ def write_to_log(sig_cmd, rmc_cmd, fec_cmd):
 
 
 def get_pollution_level_from_DYSIG(cmd):
-    # print(cmd.split(",")[1].split("*")[0])
     return cmd.split(",")[1].split("*")[0]
 
 
@@ -82,9 +81,7 @@ def reset_heading():
 # CASE 3: If plume found, clean the list and continue
 
 
-def take_turn_sequence():
-    pass
-
+# TODO: remove
 def take_90_degrees_right_turn(plume_iter):
     # $CCHSC,210.00,T,210.00,M
     print("Taking turn")
@@ -105,22 +102,21 @@ def take_90_degrees_right_turn(plume_iter):
 def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, plume_iter, new_plume_sequence):
     # print(is_in_plume)
     # print(sig_cmd, rmc_cmd)
-    time = datetime.now()
-    timestamp = time.strftime("%H:%M:%S")
-    # print(timestamp)
+
+    # Leave plume sequence
     if is_in_plume and new_plume_sequence == 0:
         if float(sig_cmd) < config["chal4"]["threshold"]:
-            print("Left Plume", rmc_cmd[0], rmc_cmd[1], rmc_cmd[2], rmc_cmd[3])
             is_in_plume = False
-            # if plume_iter > 0:
-                # Take a turn
-            take_90_degrees_right_turn(plume_iter)
+
+            # take_90_degrees_right_turn(plume_iter)
             plume_iter += 1
 
+    # plume sequence jump prevention mechanism
     elif new_plume_sequence > 0:
         print("new plume sequence", new_plume_sequence)
         new_plume_sequence -= 1 
 
+    # New plume found sequence
     elif float(sig_cmd) > config["chal4"]["threshold"]:
         print("Entered plume", rmc_cmd[0], rmc_cmd[1], rmc_cmd[2], rmc_cmd[3])
         is_in_plume = True
@@ -162,96 +158,95 @@ def start_search():
     plume_iter = 0
     new_plume_sequence = 0
 
-    while True:
-        # TODO: check if the logs update every second, possibly computer lagging?
-        # If we need to use multithreading, check ChatGPT solution, should work for this project
-        # reset_heading()
-        # Receive data from the server with buffer size
-        print("Connecting to TCP server")
-        tcp_data = sock.recv(1024)
-        data_decoded = tcp_data.decode('utf-8')
-        print("Connected to the server")
-        def first_solution():
-            if data_decoded.startswith("$DYSIG"):
+    # while True:
+    #     # TODO: check if the logs update every second, possibly computer lagging?
+    #     # If we need to use multithreading, check ChatGPT solution, should work for this project
+    #     # reset_heading()
+    #     # Receive data from the server with buffer size
+    #     print("Connecting to TCP server")
+    #     tcp_data = sock.recv(1024)
+    #     data_decoded = tcp_data.decode('utf-8')
+    #     print("Connected to the server")
+    #     def first_solution():
+    #         if data_decoded.startswith("$DYSIG"):
+    #             pollution_level = get_pollution_level_from_DYSIG(data_decoded)
+    #             rmc_coords = get_location_coordinates(previous_cmd)
+
+    #             # Prevent incorrect DYSIG or GPRMC commands to get through
+    #             if pollution_level and rmc_coords:
+    #                 is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
+    #                 write_to_log(pollution_level, rmc_coords, heading_dir)
+
+    #             else:
+    #                 print("Caught incorrect DYSIG, GPRMC or CCFEC")
+    #                 print(pollution_level, "\n", rmc_coords)
+
+    #         # elif data_decoded.startswith("$GCHDM"):
+    #         #     heading_dir = get_heading_degrees(data_decoded)
+
+    #         # elif data_decoded.startswith("$GPRMC"):
+    #         #     rmc_coords = get_location_coordinates(data_decoded)
+
+    #         else:
+    #             time = datetime.now()
+    #             timestamp = time.strftime("%H:%M:%S")
+    #             print(timestamp)
+    #             previous_cmd = data_decoded
+
+    def recieve_SIG_RMC_data():
+        pollution_level = ""
+        is_in_plume = False
+        rmc_coords = ""
+        heading_dir = 0
+        plume_iter = ""
+        new_plume_sequence = 0
+
+        print("Connecting to the server")
+        while True:
+            tcp_data = sock.recv(1024)
+            data_decoded = tcp_data.decode('utf-8')
+
+            flag = data_decoded.split(",")[0]
+
+            if flag == "$GPRMC":
+                gprmc_coords = data_decoded
+            
+            elif flag == "$DYSIG":
                 pollution_level = get_pollution_level_from_DYSIG(data_decoded)
-                rmc_coords = get_location_coordinates(previous_cmd)
-
-                # Prevent incorrect DYSIG or GPRMC commands to get through
-                if pollution_level and rmc_coords:
-                    is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
-                    write_to_log(pollution_level, rmc_coords, heading_dir)
-
-                else:
-                    print("Caught incorrect DYSIG, GPRMC or CCFEC")
-                    print(pollution_level, "\n", rmc_coords)
-
-            # elif data_decoded.startswith("$GCHDM"):
-            #     heading_dir = get_heading_degrees(data_decoded)
-
-            # elif data_decoded.startswith("$GPRMC"):
-            #     rmc_coords = get_location_coordinates(data_decoded)
-
+                rmc_coords = get_location_coordinates(gprmc_coords)
+                is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
+                write_to_log(pollution_level, rmc_coords, heading_dir)
+            
             else:
-                time = datetime.now()
-                timestamp = time.strftime("%H:%M:%S")
-                print(timestamp)
-                previous_cmd = data_decoded
+                print("Caught incorrect DYSIG, GPRMC or CCFEC")
+                print(pollution_level, "\n", rmc_coords)
 
-        # def handle_data(data):
-        #     print(data)
+    def recieve_heading_data():
+        heading_dir = ""
+        while True:
+            tcp_data = sock.recv(1024)
+            data_decoded = tcp_data.decode("utf-8")
+            print(data_decoded)
 
+            flag = data_decoded.split(",")[0]
 
-        def recieve_SIG_RMC_data():
-            pollution_level = ""
-            is_in_plume = False
-            rmc_coords = ""
-            heading_dir = 0
-            plume_iter = ""
-            new_plume_sequence = 0
+            if flag == "$CCFEC":
+                print("$CCFEC", flag)
+                flags_list[2] = get_heading_degrees(data_decoded)
+                # print(get_heading_degrees(data_decoded))
+                print("FEC flag", flags_list[2])
 
-            while True:
-                tcp_data = sock.recv(1024)
-                data_decoded = tcp_data.decode('utf-8')
+    def multithread_solution():
+        thread1 = threading.Thread(target=recieve_SIG_RMC_data)
+        thread1.start()
 
-                flag = data_decoded.split(",")[0]
+        thread2 = threading.Thread(target=recieve_heading_data)
+        # thread2.start()
 
-                if flag == "$GPRMC":
-                    gprmc_coords = data_decoded
-                
-                elif flag == "$DYSIG":
-                    pollution_level = get_pollution_level_from_DYSIG(data_decoded)
-                    rmc_coords = get_location_coordinates(gprmc_coords)
-                    is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
-                    write_to_log(pollution_level, rmc_coords, heading_dir)
-                
-                else:
-                    print("Caught incorrect DYSIG, GPRMC or CCFEC")
-                    print(pollution_level, "\n", rmc_coords)
+        thread1.join()
+        # thread2.join()
 
-        def recieve_heading_data():
-            heading_dir = ""
-            while True:
-                tcp_data = sock.recv(1024)
-                data_decoded = tcp_data.decode("utf-8")
-                print(data_decoded)
-
-                flag = data_decoded.split(",")[0]
-
-                if flag == "$CCFEC":
-                    print("$CCFEC", flag)
-                    flags_list[2] = get_heading_degrees(data_decoded)
-
-        def second_solution():
-            thread1 = threading.Thread(target=recieve_SIG_RMC_data)
-            thread1.start()
-
-            thread2 = threading.Thread(target=recieve_heading_data)
-            # thread2.start()
-
-            thread1.join()
-            # thread2.join()
-
-        second_solution()
+    multithread_solution()
 
     sock.close()
 
