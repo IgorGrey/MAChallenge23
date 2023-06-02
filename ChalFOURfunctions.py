@@ -10,11 +10,14 @@
 #-read in SIG every second
 #- once entered the pollution area
 #- save SIG and current GPS loc to "Vertical" and "Horizontal" lists depending on how many turns done if any (if none or 2 write to Vertical if 1 or 3 to horizontal)
+#TODO: Check 3 main scenarios for clearing the lists properly depending on how many turns done
 #- current reading < threshold = exited plume
 #- make 90 degree turn (right or left - any)
+#TODO: MAYBE! reduce x-track error
 #-- if no increase of SIG repeat step 4
 #--- if turned same way twice = reverse turn direction step 4
 #---- if turned same way 3 times reverse turn direction in step 4
+#TODO: MAYBE! Reduce stame_turn_count from 4 to 3 and from 2 to 1 to optimize algo
 
 #- repeat 1-4
 
@@ -23,7 +26,7 @@
 #- pick 2 strongest pollution values from vertical and horizontal lists and using gps loc predict epicentre
 #- set heading towards approx. epicentre as a heading
 #- repeat 1-7 within strongest values area (as if they were 0)
-#- SUCCESS CONDITION?
+#- SUCCESS CONDITION  = readin 80-90% pollution!
 
 # ADD LOGIC TO STAY IN EPICENTRE IF POLLUTION THRESHOLD > 80 
 
@@ -130,6 +133,16 @@ def set_heading(heading):
 
 def check_success_condition():
     # Code to check if the success condition is met
+
+#Every time after exiting plume if both lists (vertical and horizontal) "filled"
+# create gps loc of exit (DONE)
+# find most probable expicenter location (FORTH CORNER)
+# TODO: if epenter will actually not ithe middle - additional layer of logic required to restart whole alog (DECILE LATER)
+# TODO: this can be triggered on exit of plume!
+# TODO: Also all variablees has to be reset and whole algo restarted apart from one list
+# set_heading towards new gps loc and send HCS to specter (epicenter)
+# 
+
 
 while True:
     sig_value, gps_location = read_sensor_data()
