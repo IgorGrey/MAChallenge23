@@ -1,5 +1,5 @@
 import math
-
+# NOT WORKING VERSION, NEEDS PARAMETERS CHANGED
 def angle_between_waypoints(coords):
     # Convert the coordinates to radians
     coords = [(math.radians(float(lat)), math.radians(float(lon))) for (lat, lon) in coords]
