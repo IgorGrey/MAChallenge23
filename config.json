@@ -1,8 +1,10 @@
 {
     "chal1": {
         "notice_distance": 15,
+        "notice_distance_speed": 17,
         "slowdown_distance": 7,
-        "start_new_heading": 3
+        "start_new_heading": 3,
+        "start_new_heading_speed": 17
     }, 
 
     "chal2": {

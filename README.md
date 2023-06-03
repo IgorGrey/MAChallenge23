@@ -3,6 +3,10 @@ TeamSolent Autopilot project
 
 ## Challenge 1 prerequsites
 1. OpenCPN set to 127.0.0.1 port 2947 protocol UDP
+    a) Show NMEA Debug Window to check the connection
+2. Make sure external coms are enabled
+3. Start the script
+    a) If it doesn't work insert $CCNVO,2,1.0,0,0*4A into input console
 
 ## Challenge 4 prerequsites
 1. Open ShipSim3.
