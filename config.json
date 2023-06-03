@@ -2,7 +2,7 @@
     "chal1": {
         "notice_distance": 15,
         "slowdown_distance": 7,
-        "turn_distance": 3
+        "start_new_heading": 3
     }, 
 
     "chal2": {

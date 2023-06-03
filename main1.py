@@ -29,7 +29,6 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def send_cmd(cmd):
     sock.sendto(cmd, (config["general"]["server_addr"], config["general"]["opencpn_udp_port"]))
-    # sock.sendto(cmd, (UDP_IP, UDP_PORT))
 
 
 heading_found = False
@@ -76,11 +75,11 @@ def check_input_sentence(nmea_sentence):
     return nmea_sentence
 
 def check_obsticle_distance(cur_lat, cur_lon):
-    for loc in range(len(obsticles), 2):
-        ship_obj_distance = distanceFormula.calculate_distance(cur_lat, cur_lon, obsticles[loc], obsticles[loc+1])
+    # for loc in range(len(obsticles), 2):
+    #     ship_obj_distance = distanceFormula.calculate_distance(cur_lat, cur_lon, obsticles[loc], obsticles[loc+1])
 
-        if ship_obj_distance < 20:
-            return True
+    #     if ship_obj_distance < 20:
+    #         return True
 
     return False
 
@@ -89,61 +88,83 @@ def check_obsticle_distance(cur_lat, cur_lon):
 input_list_of_cmds = {0: "GPRMC", 1: "THD...", 2: "OBST", 3: "BRTH", 4: "POLL", 5: "OBJT"}
 listening_list_of_cmds = ["$GPRMC",]
 
+
+def heading_notice_distance(_online_port): 
+    thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
+    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+    thd_sentence = thd_sentence + "\r\n"
+    thd_sentence = thd_sentence.encode("ascii")
+    _online_port.write(thd_sentence)
+
+
+def heading_slowdown_distance(_online_port, lat, lon, waypoints):
+    heading_calc = headingFormula.calculate_heading(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+    hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+    hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+    hsc_sentence = hsc_sentence + "\r\n"
+    hsc_sentence = hsc_sentence.encode("ascii")
+    _online_port.write(hsc_sentence)
+
+
 # IMPORTANT this is where the command of interest is passed to
-def handle_found_sentence(sentence_num, nmea_sentence):
-    _online_port = ports_module.connect_to_port("COM5")
+def handle_found_sentence(_online_port, sentence_num, nmea_sentence):
+    # if it is $GPRMC
     if sentence_num == 0:
-        latitude,longitude = headingStandalone.extract_lat_lon(nmea_sentence)
-        
-        distance = distanceFormula.calculate_distance(latitude, longitude, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
-        
-        heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])        
+        lat, lon= headingStandalone.extract_lat_lon(nmea_sentence)
+        distance = distanceFormula.calculate_distance(lat, lon, waypoints [len(waypoints)-1], waypoints [len(waypoints)-2])
+        heading_calc = headingFormula.calculate_heading(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])        
         hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
         hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
         hsc_sentence = hsc_sentence + "\r\n"
         hsc_sentence = hsc_sentence.encode("ascii")
-        print("The heading is:", round(heading_calc, 0), " Distance to the next waypoint:",distance,"meters.")
         _online_port.write(hsc_sentence)
+        print("The heading is:", round(heading_calc, 0), " Distance to the next waypoint:",distance,"meters.")
 
         # TODO, ensure that this function is triggered once until the waypoint is complited
-        if check_obsticle_distance(latitude, longitude):
-            pass
+        # if check_obsticle_distance(latitude, longitude):
+        #     pass
         #  Check all obsticles and calculate their distances DONE
         # if Obsticle in range of 20 meters away trigger function DONE
         # Calculate the angle that is safe to avoid the obsticle
         # put waypoint in the distance 20 minutes away with the previously calculated angle
         # add the waypoint as the first (current) point to head to
-        new_lat, new_lon = 0, 0
-        waypoints.append(new_lat, new_lon)
+        # new_lat, new_lon = 0, 0
+        # waypoints.append(new_lat)
+        # waypoints.append(new_lon)
 
-        if distance <= 15:
-            thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
-            thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
-            thd_sentence = thd_sentence + "\r\n"
-            thd_sentence = thd_sentence.encode("ascii")
-            _online_port.write(thd_sentence)
+        # The current waypoint is in notice distance
+        if distance <= config["chal1"]["notice_distance"]:
+            heading_notice_distance(_online_port)
+            # thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
+            # thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+            # thd_sentence = thd_sentence + "\r\n"
+            # thd_sentence = thd_sentence.encode("ascii")
+            # _online_port.write(thd_sentence)
 
-            if distance <= 7:
+            # The current waypoint is in slowdown distance
+            if distance <= config["chal1"]["slowdown_distance"]:
+                heading_slowdown_distance(_online_port, lat, lon, waypoints)
+                # heading_calc = headingFormula.calculate_heading(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                # hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+                # hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+                # hsc_sentence = hsc_sentence + "\r\n"
+                # hsc_sentence = hsc_sentence.encode("ascii")
+                # _online_port.write(hsc_sentence)
                 
-                heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
-                # print(heading_calc, "Heading set to <==")
-                
-                hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
-                hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
-                hsc_sentence = hsc_sentence + "\r\n"
-                hsc_sentence = hsc_sentence.encode("ascii")
-                _online_port.write(hsc_sentence)
-                
-                if distance <= 3:
+                # The current waypoint is reached
+                if distance <= config["chal1"]["start_new_heading"]:
                     waypoints.pop()
                     waypoints.pop()
-                    heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
-                    print(heading_calc, "Heading set to <==")
-                    print("Reached waypoint")
+                    heading_calc = headingFormula.calculate_heading(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                    print("-----------------------------")
+                    print("Current waypoint reached")
+                    print("Heading to the next Waypoint")
+                    print("-----------------------------")
                     hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
                     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
                     hsc_sentence = hsc_sentence + "\r\n"
                     hsc_sentence = hsc_sentence.encode("ascii")
+
                     _online_port.write(hsc_sentence)
                     thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
                     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
@@ -163,6 +184,8 @@ def setup_input_console(port="COM5"):
         i = 1
         while True:
             res = _online_port.readline().decode()
+            
+            # The first initial sentence
             if res:
                 if res.startswith("$" + "GPRMC") and i == 1:
                     # Created to reverse because the setup is for the shipSim should be changed!!!!!!!!!!!!
@@ -197,7 +220,7 @@ def setup_input_console(port="COM5"):
 
             for key, value in input_list_of_cmds.items():
                     if res.startswith("$" + value):
-                        handle_found_sentence(key, res)
+                        handle_found_sentence(_online_port, key, res)
            
     try:
         response_thread = threading.Thread(target=handle_reponses)
