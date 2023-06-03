@@ -1,7 +1,8 @@
 # MAChallenge23
 TeamSolent Autopilot project
 
-*Ongoing*
+## Challenge 1 prerequsites
+1. OpenCPN set to 127.0.0.1 port 2947 protocol UDP
 
 ## Challenge 4 prerequsites
 1. Open ShipSim3.

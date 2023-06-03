@@ -136,12 +136,13 @@ def check_success_condition():
 
 #Every time after exiting plume if both lists (vertical and horizontal) "filled"
 # create gps loc of exit (DONE)
+# find maximum values withing both lists and grab their gps locations
 # find most probable expicenter location (FORTH CORNER)
 # TODO: if epenter will actually not ithe middle - additional layer of logic required to restart whole alog (DECILE LATER)
 # TODO: this can be triggered on exit of plume!
 # TODO: Also all variablees has to be reset and whole algo restarted apart from one list
 # set_heading towards new gps loc and send HCS to specter (epicenter)
-# 
+### COMMENT: IF CONDITION MET - WE FOUND EPICENTER IF NO IT WILL EXIT AND REAPEAT ALL
 
 
 while True:

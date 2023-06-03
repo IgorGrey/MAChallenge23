@@ -25,18 +25,12 @@ with open("config.json", "r") as config_file:
     config = config_file.read()
     config = json.loads(config)
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 2947
-
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def send_cmd(cmd):
-    # new_cmd = f"{cmd}\r\n".encode("ascii")
-    # new_cmd = "$GPRMC,001115.81,A,5050.700849,N,00044.822914,W,0.0,269.7,230418,4.0,W,A,S*43"
     sock.sendto(cmd, (config["general"]["server_addr"], config["general"]["opencpn_udp_port"]))
+    # sock.sendto(cmd, (UDP_IP, UDP_PORT))
 
-
-# LOGIC: [lat1, lon1, lat2, lon2,...]
 
 heading_found = False
 waypoints = [50.845, -0.746623, 50.845498, -0.746619,
@@ -45,7 +39,6 @@ waypoints = [50.845, -0.746623, 50.845498, -0.746619,
              50.844937, -0.745483, 50.84491, -0.746166 ]
 waypoints.reverse()
 
-# Logic: [lat1, lon1, lat2, lon2]
 obsticles = []
 
 def calculate_checksum(sentence):
@@ -75,13 +68,8 @@ def check_output_sentence(nmea_sentence):
     if not try_checksum(nmea_sentence):
         print("Checksum is not correct")
 
-    # TODO: write commands that we need and requirements they must meet
-    # {first NMEA chars: regex that needs to be met}
-
 
 def check_input_sentence(nmea_sentence):
-    # Run checks if the sentence meets the basic rules
-    # TODO: check if checksum is correct
     if not nmea_sentence.starts_with("$"):
         nmea_sentence = "$" + nmea_sentence
 
@@ -169,7 +157,9 @@ def handle_found_sentence(sentence_num, nmea_sentence):
 
 def setup_input_console(port="COM5"):
     _online_port = ports_module.connect_to_port("COM5")
+    print("Setting up input console")
     def handle_reponses():
+        print("Starting the serial port")
         i = 1
         while True:
             res = _online_port.readline().decode()
@@ -209,23 +199,16 @@ def setup_input_console(port="COM5"):
                     if res.startswith("$" + value):
                         handle_found_sentence(key, res)
            
-                # if res in input_list_of_cmds:
-                #     print(res, "Found in a list <<<<")
-                # print(res)
-    
     try:
         response_thread = threading.Thread(target=handle_reponses)
         response_thread.start()
-        # handle_reponses()
 
-    except:
+    except Exception as e:
+        print("Line 206 listening error:", e)
         pass
-        # logger.error()
 
     while True:
         try:
-            # INPUT FORMAT $COMMAND<NUMBERS>,<NUMBERS>,..<CHECKSUM>
-            # OR SIMPLE WAY $SENTENCE*CHECKSUM
             new_cmd = input("Enter a command:")
             if new_cmd[:4] == input_list_of_cmds[2] or new_cmd[:4] == input_list_of_cmds[3] or new_cmd[:4] == input_list_of_cmds[4] or new_cmd[:4] == input_list_of_cmds[5]:
                 pass
@@ -264,7 +247,10 @@ def start_program():
         listening_console_thread = threading.Thread(target=setup_listening_console, args=(list_of_ports[1],))
 
         print("Choose mode:\n1. Input console\n2. Listening console")
-        mode_choice = int(input())
+        try:
+            mode_choice = int(input())
+        except:
+            exit()
 
         if mode_choice == 1:
             input_console_thread.start()
@@ -281,13 +267,4 @@ def start_program():
 
 
 if __name__ == "__main__":
-    # Start logger
-    # logger = logging.getLogger(__name__)
-    # file_handler = logging.FileHandler(_LOG_FILE)
-    # log_formatter = logging.Formatter("{asctime}: {level} {message}")
-    # formatter = logging.Formatter(log_formatter, style="{")
-    # file_handler.setFormatter(log_formatter)
-    # logger.addHandler(file_handler)
-    # logger.info("Script has started")
-
     start_program()
