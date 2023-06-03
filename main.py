@@ -126,15 +126,15 @@ def handle_found_sentence(sentence_num, nmea_sentence):
         _online_port.write(hsc_sentence)
 
         # TODO, ensure that this function is triggered once until the waypoint is complited
-        if check_obsticle_distance(latitude, longitude):
-            pass
+        # if check_obsticle_distance(latitude, longitude):
+        #     pass
         #  Check all obsticles and calculate their distances DONE
         # if Obsticle in range of 20 meters away trigger function DONE
         # Calculate the angle that is safe to avoid the obsticle
         # put waypoint in the distance 20 minutes away with the previously calculated angle
         # add the waypoint as the first (current) point to head to
-        new_lat, new_lon = 0, 0
-        waypoints.append(new_lat, new_lon)
+        # new_lat, new_lon = 0, 0
+        # waypoints.append(new_lat, new_lon)
 
         if distance <= 15:
             thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
