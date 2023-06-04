@@ -76,15 +76,6 @@ def check_input_sentence(nmea_sentence):
 
     return nmea_sentence
 
-def check_obsticle_distance(cur_lat, cur_lon):
-    # for loc in range(len(obsticles), 2):
-    #     ship_obj_distance = distanceFormula.calculate_distance(cur_lat, cur_lon, obsticles[loc], obsticles[loc+1])
-
-    #     if ship_obj_distance < 20:
-    #         return True
-
-    return False
-
 
 # IMPORTANT! Add which command you want to extract
 input_list_of_cmds = {0: "GPRMC", 1: "THD...", 2: "OBST", 3: "BRTH", 4: "POLL", 5: "OBJT"}
@@ -276,7 +267,6 @@ def setup_input_console(port="COM5"):
 
     except Exception as e:
         print("Line 206 listening error:", e)
-        pass
 
 
     while True:
@@ -332,7 +322,6 @@ def start_program():
             print(f"Option not available {mode_choice}")
             exit()
     
-
     except OSError as oe:
         print("There is a problem with configuring the port", oe)
     
