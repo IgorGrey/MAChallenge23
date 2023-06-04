@@ -1,6 +1,7 @@
 # Add $ and checksum to result
 #  pass parameters as Integers
 
+# Thrust 
 def generate_thd_sentence(forward_thrust):
     sentence = f'$CCTHD,{forward_thrust:.2f},0.00,0.00,0.00,0.00,0.00,0.00,0.00'
     return sentence
