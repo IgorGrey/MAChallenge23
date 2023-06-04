@@ -8,6 +8,9 @@ TeamSolent Autopilot project
 3. Start the script
     a) If it doesn't work insert $CCNVO,2,1.0,0,0*4A into input console
 
+## Challenge 2 prerequsites
+`Follow Challenge 1 above`
+
 ## Challenge 4 prerequsites
 1. Open ShipSim3.
 2. Load Plume onto the map (Do not forget to tick generate SIG commands).

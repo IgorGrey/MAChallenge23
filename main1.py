@@ -101,9 +101,7 @@ def start_sequence(_online_port):
     _online_port.write(cmd_3)
 
 def swap_last_waypoints(past_waypoints):
-    print(past_waypoints)
     past_waypoints[-1], past_waypoints[-2] = past_waypoints[-2], past_waypoints[-1] 
-    print(past_waypoints)
 
 
 def heading_notice_distance(_online_port, speed):
@@ -150,6 +148,7 @@ def l3_distance(_online_port, lat, lon, waypoints, past_waypoints, speed):
 # IMPORTANT this is where the command of interest is passed to
 def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, past_waypoints, recovery_sequence):
     # if it is $GPRMC
+    print("Recovery:", recovery_sequence)
     if sentence_num == 0:
         lat, lon = headingStandalone.extract_lat_lon(nmea_sentence)
         distance = distanceFormula.calculate_distance(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
@@ -166,7 +165,7 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
             heading_notice_distance(_online_port, config["chal1"]["l1_speed"])
 
             # The current waypoint is in slowdown distance
-            if distance <= config["chal1"]["l2_distance"]:
+            if distance <= config["chal1"]["l2_distance"] and len(waypoints) > 2:
                 heading_slowdown_distance(_online_port, lat, lon, waypoints)
                 
                 # The current waypoint is reached
@@ -179,11 +178,28 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
                 heading_slowdown_distance(_online_port, lat, lon, waypoints)
 
                 if distance <= config["chal1"]["l3_distance"]:
+                    # Stop the boat
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal1"]["last_l3_speed"])
+                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                    thd_sentence = thd_sentence + "\r\n"
+                    thd_sentence = thd_sentence.encode("ascii")
+                    _online_port.write(thd_sentence)
+                
+                elif distance <= config["chal1"]["l3_stop_thrust_distance"]:
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(0)
+                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                    thd_sentence = thd_sentence + "\r\n"
+                    thd_sentence = thd_sentence.encode("ascii")
+                    _online_port.write(thd_sentence)
+
+                    past_waypoints.append(waypoints.pop())
+                    past_waypoints.append(waypoints.pop())
+
                     # TODO: replace l3_distance with a new function
                     # l3_last_distance should not pop waypoints since they are no more of them
                     # could also be integrated into exisitng function and checked against the 
                     # length of the list
-                    waypoints, past_waypoints = l3_distance(_online_port, lat, lon, waypoints, past_waypoints, config["chal1"]["last_l3_speed"])
+                    # waypoints, past_waypoints = l3_distance(_online_port, lat, lon, waypoints, past_waypoints, config["chal1"]["last_l3_speed"])
         
         elif len(waypoints) == 0:
             print("-----------------------------")
@@ -192,20 +208,35 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
             exit()
 
         elif recovery_sequence:
+# Recovery: True
+# The heading is: 355.0  Distance to the next waypoint: 55 meters.
+# 50.845004 -0.746545 [-0.746623, 50.845]
+# Recovery distance 7509400
+# Recovery: True
+# The heading is: 355.0  Distance to the next waypoint: 55 meters.
+# 50.845006 -0.746547 [-0.746623, 50.845]
+# Recovery distance 5
+            print(lat, lon, past_waypoints)
             recovery_distance = distanceFormula.calculate_distance(lat, lon, past_waypoints[-1], past_waypoints[-2])
-            if recovery_distance >= 5:
+            print("Recovery distance", recovery_distance)
+            if recovery_distance >= config["chal1"]["l3_recovery_distance"]:
                 forward_thrust = generate_thd_hsc.generate_thd_sentence(config["chal1"]["l0_speed"])
                 forward_thrust = forward_thrust + "*" + calculate_checksum(forward_thrust[1:])
                 forward_thrust = forward_thrust + "\r\n"
                 forward_thrust = forward_thrust.encode("ascii")
                 _online_port.write(forward_thrust)
                 recovery_sequence = False
-                print(forward_thrust)
+            
+            else:
+                forward_thrust = generate_thd_hsc.generate_thd_sentence(config["chal1"]["l3_speed"])
+                forward_thrust = forward_thrust + "*" + calculate_checksum(forward_thrust[1:])
+                forward_thrust = forward_thrust + "\r\n"
+                forward_thrust = forward_thrust.encode("ascii")
+                _online_port.write(forward_thrust)
 
         # Create new function for rmc to opencpn
         send_cmd(nmea_sentence.encode("ascii"))
 
-        print(recovery_sequence)
         return recovery_sequence
 
 
