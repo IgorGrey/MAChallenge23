@@ -191,15 +191,9 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
                     thd_sentence = thd_sentence + "\r\n"
                     thd_sentence = thd_sentence.encode("ascii")
                     _online_port.write(thd_sentence)
-
                     past_waypoints.append(waypoints.pop())
                     past_waypoints.append(waypoints.pop())
-
-                    # TODO: replace l3_distance with a new function
-                    # l3_last_distance should not pop waypoints since they are no more of them
-                    # could also be integrated into exisitng function and checked against the 
-                    # length of the list
-                    # waypoints, past_waypoints = l3_distance(_online_port, lat, lon, waypoints, past_waypoints, config["chal1"]["last_l3_speed"])
+                    exit()
         
         elif len(waypoints) == 0:
             print("-----------------------------")
@@ -207,16 +201,8 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
             print("-----------------------------")
             exit()
 
+        # Function to slow down when doing turn to a new waypoint
         elif recovery_sequence:
-# Recovery: True
-# The heading is: 355.0  Distance to the next waypoint: 55 meters.
-# 50.845004 -0.746545 [-0.746623, 50.845]
-# Recovery distance 7509400
-# Recovery: True
-# The heading is: 355.0  Distance to the next waypoint: 55 meters.
-# 50.845006 -0.746547 [-0.746623, 50.845]
-# Recovery distance 5
-            print(lat, lon, past_waypoints)
             recovery_distance = distanceFormula.calculate_distance(lat, lon, past_waypoints[-1], past_waypoints[-2])
             print("Recovery distance", recovery_distance)
             if recovery_distance >= config["chal1"]["l3_recovery_distance"]:
