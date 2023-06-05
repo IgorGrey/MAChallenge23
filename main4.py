@@ -105,6 +105,39 @@ def calculate_within_360(value):
         value += 360
     return value
 
+# GPS format coverter fundtion DDM to DD
+def ddm_to_decimal(ddm):
+    # Convert DDM (Degrees Decimal Minutes) coordinates to decimal degrees
+    degrees = int(ddm) // 100  # Extract the degrees component
+    minutes = (int(ddm) % 100) / 60  # Extract the minutes component and convert to decimal
+    decimal = degrees + minutes  # Combine degrees and decimal minutes
+    return decimal
+
+# Returns gps location of forth corner of the square, from given 3 gps locations
+def calculate_fourth_corner(lat1, long1, lat2, long2, lat3, long3):
+    # Convert DDM coordinates to decimal degrees
+    lat1_decimal = ddm_to_decimal(lat1)
+    long1_decimal = ddm_to_decimal(long1)
+    lat2_decimal = ddm_to_decimal(lat2)
+    long2_decimal = ddm_to_decimal(long2)
+    lat3_decimal = ddm_to_decimal(lat3)
+    long3_decimal = ddm_to_decimal(long3)
+
+    # Calculate the average latitude and longitude
+    lat_avg = (lat1_decimal + lat2_decimal + lat3_decimal) / 3
+    long_avg = (long1_decimal + long2_decimal + long3_decimal) / 3
+
+    # Calculate the relative distance from the center to one of the corners
+    lat_diff = lat1_decimal - lat_avg
+    long_diff = long1_decimal - long_avg
+
+    # Calculate the GPS location of the fourth corner
+    lat_fourth = lat_avg + lat_diff
+    long_fourth = long_avg + long_diff
+
+    return lat_fourth, long_fourth
+
+
 
 def make_turn(same_turn_count, turn_dir, current_heading):
     # -1 always take left, 1 always take right
@@ -147,17 +180,30 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 
                 # max_sig_value_v_list_record, max_sig_value_h_list_record extracted from list and consists of [SIG value(float), Lat, Lon]
                 max_sig_value_v_list_record = max(v_list)
-                print(max_sig_value_v_list_record)
+                print("V_LIST MAX", max_sig_value_v_list_record)
                 max_sig_value_h_list_record =  max(h_list)
-                print(max_sig_value_h_list_record)
+                print("H_LIST MAX", max_sig_value_h_list_record)
 
                 #run forth corner func and save to variable
+                epiceter_aprox_location_calc = calculate_fourth_corner(max_sig_value_v_list_record[1],max_sig_value_v_list_record[2],max_sig_value_h_list_record[1],max_sig_value_h_list_record[2],last_exit_loc[0],last_exit_loc[1])
+                print("CALCULATION RESULTS:", epiceter_aprox_location_calc)
+                
                 #set heading towards new location found
-                #make sure whole algo repeatable
-                    
-                calculate_fourth_corner(last_exit_loc,1,2)
-                set_heading(approximate_epicentre)
-                check_disatnce()
+                aprox_epiceter_heading = calculate_heading(last_exit_loc[0],last_exit_loc[1],epiceter_aprox_location_calc[0],epiceter_aprox_location_calc[1])
+                print("HEADING TOWARDS PREDICTED EPICENTER", aprox_epiceter_heading)
+
+                # set and send new heading to specter for execution
+
+                # created new list for writing sig and location 
+                # altertatively rest the list that been filled first and append there
+                # TODO: CONCERN that loop is not nessesery within the function because function will be called some many times
+                
+                # in loop check for max sing value
+                # Once decreased by N make_turn()
+                
+                ???
+                # make sure whole algo repeatable to be able to narrow down the search area
+                # make sure some variable reseted and list emptied before repeating algo
 
             #-------------------------------
             if is_in_plume and same_turn_count == 3 or is_in_plume and same_turn_count == 1:
