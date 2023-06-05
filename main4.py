@@ -139,14 +139,18 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
     if is_in_plume and new_plume_sequence == 0:
         if float(sig_cmd) < config["chal4"]["threshold"]:
             print("Exit")
+            # grab current loc
             last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
 
             if len(v_list) >= 2 and len(h_list) >= 2:
-                last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
+                #last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
+                
                 # max_sig_value_v_list_record, max_sig_value_h_list_record extracted from list and consists of [SIG value(float), Lat, Lon]
-                max_sig_value_v_list_record =  max(v_list)
+                max_sig_value_v_list_record = max(v_list)
+                print(max_sig_value_v_list_record)
                 max_sig_value_h_list_record =  max(h_list)
-                #grab current loc
+                print(max_sig_value_h_list_record)
+
                 #run forth corner func and save to variable
                 #set heading towards new location found
                 #make sure whole algo repeatable
