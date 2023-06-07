@@ -35,7 +35,7 @@ heading_found = False
 waypoints = [50.845, -0.746623, 50.845498, -0.746619,
              50.845496, -0.745935, 50.845006, -0.745927,
              50.845475, -0.745747, 50.845278, -0.745642,
-             50.844937, -0.745483, 50.84491, -0.746166 ]
+             50.844937, -0.745483, 50.84491, -0.746166]
 waypoints.reverse()
 
 past_waypoints = []
@@ -146,9 +146,8 @@ def l3_distance(_online_port, lat, lon, waypoints, past_waypoints, speed):
 
 
 # IMPORTANT this is where the command of interest is passed to
-def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, past_waypoints, recovery_sequence):
+def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, past_waypoints, loop_keep_alive, recovery_sequence):
     # if it is $GPRMC
-    print("Recovery:", recovery_sequence)
     if sentence_num == 0:
         lat, lon = headingStandalone.extract_lat_lon(nmea_sentence)
         distance = distanceFormula.calculate_distance(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
@@ -158,15 +157,19 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
         hsc_sentence = hsc_sentence + "\r\n"
         hsc_sentence = hsc_sentence.encode("ascii")
         _online_port.write(hsc_sentence)
-        print("The heading is:", round(heading_calc, 0), " Distance to the next waypoint:",distance,"meters.")
+        # print("The heading is:", round(heading_calc, 0), " Distance to the next waypoint:",distance,"meters.")
 
         # The current waypoint is in notice distance
         if distance <= config["chal1"]["l1_distance"] and len(waypoints) != 0:
             heading_notice_distance(_online_port, config["chal1"]["l1_speed"])
 
+            # print("Current waypoint in notice distance ", len(waypoints))
+
             # The current waypoint is in slowdown distance
             if distance <= config["chal1"]["l2_distance"] and len(waypoints) > 2:
                 heading_slowdown_distance(_online_port, lat, lon, waypoints)
+
+                print("1st If statement", len(waypoints))
                 
                 # The current waypoint is reached
                 if distance <= config["chal1"]["l3_distance"]:
@@ -177,15 +180,10 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
             elif distance <= config["chal1"]["l2_distance"] and len(waypoints) == 2:
                 heading_slowdown_distance(_online_port, lat, lon, waypoints)
 
-                if distance <= config["chal1"]["l3_distance"]:
-                    # Stop the boat
-                    thd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal1"]["last_l3_speed"])
-                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
-                    thd_sentence = thd_sentence + "\r\n"
-                    thd_sentence = thd_sentence.encode("ascii")
-                    _online_port.write(thd_sentence)
-                
-                elif distance <= config["chal1"]["l3_stop_thrust_distance"]:
+                print("First elif statement", len(waypoints))
+
+                if distance <= config["chal1"]["l3_stop_thrust_distance"]:
+                    print("Stop thrust boat logic")
                     thd_sentence = generate_thd_hsc.generate_thd_sentence(0)
                     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
                     thd_sentence = thd_sentence + "\r\n"
@@ -193,7 +191,18 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
                     _online_port.write(thd_sentence)
                     past_waypoints.append(waypoints.pop())
                     past_waypoints.append(waypoints.pop())
-                    exit()
+                    loop_keep_alive = False
+                    
+
+                elif distance <= config["chal1"]["l3_distance"]:
+                    print("Stop the boat logic", len(waypoints))
+                    # Stop the boat
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal1"]["last_l3_speed"])
+                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                    thd_sentence = thd_sentence + "\r\n"
+                    thd_sentence = thd_sentence.encode("ascii")
+                    _online_port.write(thd_sentence)
+                
         
         elif len(waypoints) == 0:
             print("-----------------------------")
@@ -204,7 +213,7 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
         # Function to slow down when doing turn to a new waypoint
         elif recovery_sequence:
             recovery_distance = distanceFormula.calculate_distance(lat, lon, past_waypoints[-1], past_waypoints[-2])
-            print("Recovery distance", recovery_distance)
+            # print("Recovery distance", recovery_distance)
             if recovery_distance >= config["chal1"]["l3_recovery_distance"]:
                 forward_thrust = generate_thd_hsc.generate_thd_sentence(config["chal1"]["l0_speed"])
                 forward_thrust = forward_thrust + "*" + calculate_checksum(forward_thrust[1:])
@@ -223,7 +232,7 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
         # Create new function for rmc to opencpn
         send_cmd(nmea_sentence.encode("ascii"))
 
-        return recovery_sequence
+        return loop_keep_alive, recovery_sequence
 
 
 def setup_input_console(port="COM5"):
@@ -238,8 +247,9 @@ def setup_input_console(port="COM5"):
 
         # Recovery sequence during the turn, limits speed on turns
         recovery_sequence = False
+        loop_keep_alive = True
 
-        while True:
+        while loop_keep_alive:
             res = _online_port.readline().decode()
             if res:
                 if res.startswith("$" + "GPRMC") and i == 1:
@@ -262,7 +272,7 @@ def setup_input_console(port="COM5"):
                     hsc_sentence = hsc_sentence + "\r\n"
                     hsc_sentence = hsc_sentence.encode("ascii")
 
-                    thd_sentence = generate_thd_hsc.generate_thd_sentence(17)
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal1"]["l0_speed"])
                     thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
                     thd_sentence = thd_sentence + "\r\n"
                     thd_sentence = thd_sentence.encode("ascii")
@@ -276,7 +286,7 @@ def setup_input_console(port="COM5"):
             # TODO: decide which flags we need, if only $GPRMC then remote for loop
             for key, value in input_list_of_cmds.items():
                     if res.startswith("$" + value):
-                        recovery_sequence = handle_found_sentence(_online_port, key, res, waypoints, past_waypoints, recovery_sequence)
+                        loop_keep_alive, recovery_sequence = handle_found_sentence(_online_port, key, res, waypoints, past_waypoints, loop_keep_alive, recovery_sequence)
            
     try:
         response_thread = threading.Thread(target=handle_reponses)
