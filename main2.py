@@ -24,7 +24,10 @@ waypoints.reverse()
 
 obstacles = []
 
-# calculate_checksum from main1.py
+
+def chal2_logic(loop_keep_alive):
+    pass
+
 
 def setup_input_console(port="COM5"):
     _online_port = ports_module.connect_to_port("COM5")
@@ -32,6 +35,11 @@ def setup_input_console(port="COM5"):
 
     def handle_responses():
         main1.start_sequence()
+
+        loop_keep_alive = True
+
+        while loop_keep_alive:
+            chal2_logic(loop_keep_alive)
 
     try:
         response_thread = threading.Thread(target=handle_responses)

@@ -82,7 +82,7 @@ input_list_of_cmds = {0: "GPRMC", 1: "THD...", 2: "OBST", 3: "BRTH", 4: "POLL", 
 listening_list_of_cmds = ["$GPRMC",]
 
 def start_sequence(_online_port):
-    cmd_1 = "$CCNVO,2,1.0,0,0*4A"
+    cmd_1 = "$CCNVO,2,1.0,0,0" # $CCNVO,2,1.0,0,0*4A
     cmd_1 = cmd_1 + "*" + calculate_checksum(cmd_1[1:])
     cmd_1 = cmd_1 + "\r\n"
     cmd_1 = cmd_1.encode("ascii")
