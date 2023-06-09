@@ -188,20 +188,19 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 epiceter_aprox_location_calc = calculate_fourth_corner(max_sig_value_v_list_record[1],max_sig_value_v_list_record[2],max_sig_value_h_list_record[1],max_sig_value_h_list_record[2],last_exit_loc[0],last_exit_loc[1])
                 print("CALCULATION RESULTS:", epiceter_aprox_location_calc)
                 
-                #set heading towards new location found
-                aprox_epiceter_heading = calculate_heading(last_exit_loc[0],last_exit_loc[1],epiceter_aprox_location_calc[0],epiceter_aprox_location_calc[1])
+                #set heading towards new location found to specter
+                aprox_epiceter_heading = headingFormula.calculate_heading(last_exit_loc[0],last_exit_loc[1],epiceter_aprox_location_calc[0],epiceter_aprox_location_calc[1])
                 print("HEADING TOWARDS PREDICTED EPICENTER", aprox_epiceter_heading)
 
-                # set and send new heading to specter for execution
-
-                # created new list for writing sig and location 
-                # altertatively rest the list that been filled first and append there
+                # Write to the list h or v (rewrite)
+                # Keep tracking for success condition
+                # Keep trakcing for sig decrease
+                # Once decreased by N make_turn()
+                # When lowers for n time/distance rerun whole thing with updated threshold
+                # Check for max sig when
+                
                 # TODO: CONCERN that loop is not nessesery within the function because function will be called some many times
                 
-                # in loop check for max sing value
-                # Once decreased by N make_turn()
-                
-                ???
                 # make sure whole algo repeatable to be able to narrow down the search area
                 # make sure some variable reseted and list emptied before repeating algo
 
