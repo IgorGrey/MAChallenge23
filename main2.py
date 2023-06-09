@@ -33,16 +33,11 @@ def setup_input_console(port="COM5"):
     _online_port = ports_module.connect_to_port("COM5")
     print("Setting up input console")
 
-    def handle_responses():
-        main1.start_sequence()
-
-        loop_keep_alive = True
-
-        while loop_keep_alive:
-            chal2_logic(loop_keep_alive)
+    def handle_both_challenges():
+        pass
 
     try:
-        response_thread = threading.Thread(target=handle_responses)
+        response_thread = threading.Thread(target=handle_both_challenges)
         response_thread.start()
     
     except Exception as e:

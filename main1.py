@@ -82,11 +82,11 @@ input_list_of_cmds = {0: "GPRMC", 1: "THD...", 2: "OBST", 3: "BRTH", 4: "POLL", 
 listening_list_of_cmds = ["$GPRMC",]
 
 def start_sequence(_online_port):
-    cmd_1 = "$CCNVO,2,1.0,0,0" # $CCNVO,2,1.0,0,0*4A
-    cmd_1 = cmd_1 + "*" + calculate_checksum(cmd_1[1:])
-    cmd_1 = cmd_1 + "\r\n"
-    cmd_1 = cmd_1.encode("ascii")
-    _online_port.write(cmd_1)
+    # cmd_1 = "$CCNVO,2,1.0,0,0" # $CCNVO,2,1.0,0,0*4A
+    # cmd_1 = cmd_1 + "*" + calculate_checksum(cmd_1[1:])
+    # cmd_1 = cmd_1 + "\r\n"
+    # cmd_1 = cmd_1.encode("ascii")
+    # _online_port.write(cmd_1)
     
     cmd_2 = "$CCAPM,0,64,0,80"
     cmd_2 = cmd_2 + "*" + calculate_checksum(cmd_2[1:])
@@ -240,19 +240,19 @@ def setup_input_console(port="COM5"):
     print("Setting up input console")
     def handle_reponses():
         print("Starting the serial port")
-        i = 1
 
         # Sequences that allow to communicate with SPECTER aka Initialisation
         start_sequence(_online_port)
 
         # Recovery sequence during the turn, limits speed on turns
+        first_sequence = True
         recovery_sequence = False
         loop_keep_alive = True
 
         while loop_keep_alive:
             res = _online_port.readline().decode()
             if res:
-                if res.startswith("$" + "GPRMC") and i == 1:
+                if res.startswith("$" + "GPRMC") and first_sequence == True:
                     # Created to reverse because the setup is for the shipSim should be changed!!!!!!!!!!!!
 
                     thd_sentence = generate_thd_hsc.generate_thd_sentence(-17)
@@ -281,7 +281,7 @@ def setup_input_console(port="COM5"):
                     print(hsc_sentence)
                     _online_port.write(hsc_sentence)
                     print("Init")
-                    i = 0
+                    first_sequence = False
 
             # TODO: decide which flags we need, if only $GPRMC then remote for loop
             for key, value in input_list_of_cmds.items():

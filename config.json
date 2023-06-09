@@ -2,12 +2,12 @@
     "chal1": {
         "l0_speed": 70,
         "l1_distance": 18,
-        "l1_speed": 15,
+        "l1_speed": 15, 
         "l2_distance": 10,
         "l3_distance": 4,
         "l3_stop_thrust_distance": 2,
-        "l3_speed": 7,
-        "last_l3_speed": -20,
+        "l3_speed": 5,
+        "last_l3_speed": -46,
         "l3_recovery_distance": 8 
     }, 
 
