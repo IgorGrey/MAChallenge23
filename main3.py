@@ -1,6 +1,9 @@
 import math 
 import distanceFormula
-def autonomously_berth(start_latitude, start_longitude, berthing_points):
+import main1
+import ports_module
+import main4
+def autonomously_berth(start_latitude, start_longitude, berthing_points, heading):
     safety_distance = 1.0  # meters
     parallel_threshold = 5.0  # degrees
 
@@ -30,7 +33,7 @@ def autonomously_berth(start_latitude, start_longitude, berthing_points):
             print(f"Current Distance to Target: {distance_to_target:.2f} meters")
 
         # Check if the USV has parallelly berthed
-        bearing_to_target = # HSC reading !!!!!!!!!!!!!!!!!!!
+        bearing_to_target = heading # HSC reading !!!!!!!!!!!!!!!!!!!
         if abs(bearing_to_target) < parallel_threshold or abs(bearing_to_target - 180) < parallel_threshold:
             print("Successful berthing! The USV is fully stopped in parallel to the berth.")
         else:
@@ -40,9 +43,29 @@ def autonomously_berth(start_latitude, start_longitude, berthing_points):
         start_latitude = target_latitude
         start_longitude = target_longitude
 
-# Specify the start point coordinates # GET REAL DATA FROM RMC sentences
-start_latitude = START_LATITUDE    
-start_longitude = START_LONGITUDE
+
+
+
+def start_program(_online_port):
+    list_of_ports = ports_module.check_ports()
+    
+
+    loop_keep_alive = True
+
+    while loop_keep_alive:
+        res = _online_port.readline().decode()
+        if res and res.startswith("$"+"GPRMC"):
+        # list of 4 arguments i need only 0 and 2 lat and lon
+            current_location = main4.get_location_coordinates(res)
+            # Specify the start point coordinates # GET REAL DATA FROM RMC sentences 
+            start_latitude = float(current_location[0])
+            start_longitude = float(current_location[2])
+            heading = main4.get_heading_degrees(res)
+
+            autonomously_berth(start_latitude, start_longitude, berthing_points, heading)
+    
+
+
 
 # Specify the berthing points as a list of tuples (latitude, longitude)
 berthing_points = [
@@ -111,3 +134,5 @@ berthing_points = [
 (-1.49392301,	51.01457981),
 ]
     # Add more berthing points as needed
+if __name__ == "__main__":
+    start_program(ports_module.connect_to_port("COM5"))

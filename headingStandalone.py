@@ -27,6 +27,18 @@ def extract_lat_lon(nmea_sentence):
             lon = -lon
     return round(lat, 6), round(lon, 6)
 
+def extract_heading_hsc(nmea_sentence):
+    """
+    Extracts heading from an HSC NMEA sentence.
+    Example: $HCHDG,123.45,,,10.5,E*3C
+    """
+    heading = 0.0
+    if nmea_sentence.startswith("CCHSC"):
+        data = nmea_sentence.split(",")
+        if len(data) >= 2:
+            heading = float(data[1])
+    return heading
+
 def extract_lat_lon_from_wpl(nmea_sentence):
     """
     Extracts latitude and longitude from a MMWPL NMEA sentence.

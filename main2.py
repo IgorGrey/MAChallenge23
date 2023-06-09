@@ -29,15 +29,16 @@ def chal2_logic(loop_keep_alive):
     pass
 
 
+def handle_both_challenges(_online_port):
+    main1.handle_responses(_online_port)
+
+
 def setup_input_console(port="COM5"):
     _online_port = ports_module.connect_to_port("COM5")
     print("Setting up input console")
 
-    def handle_both_challenges():
-        pass
-
     try:
-        response_thread = threading.Thread(target=handle_both_challenges)
+        response_thread = threading.Thread(target=handle_both_challenges, args=[_online_port])
         response_thread.start()
     
     except Exception as e:
@@ -61,7 +62,7 @@ def start_program():
     list_of_ports = ports_module.check_ports()
 
     try:
-        input_console_thread = threading.Thread()
+        input_console_thread = threading.Thread(target=setup_input_console)
         listening_console_thread = threading.Thread()
 
         print("Choose mode:\n1. Input console\n2. Listening console")
@@ -73,7 +74,7 @@ def start_program():
             exit()
 
         if mode_choice == 1:
-            input_console_thread.start(target=setup_input_console)
+            input_console_thread.start()
 
         # Setup listening console from main1.py
         # There are no differences in code
