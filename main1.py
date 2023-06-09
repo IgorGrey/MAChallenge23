@@ -234,62 +234,61 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
 
         return loop_keep_alive, recovery_sequence
 
+def handle_responses(_online_port):
+    print("Starting the serial port")
+
+    # Sequences that allow to communicate with SPECTER aka Initialisation
+    start_sequence(_online_port)
+
+    # Recovery sequence during the turn, limits speed on turns
+    first_sequence = True
+    recovery_sequence = False
+    loop_keep_alive = True
+
+    while loop_keep_alive:
+        res = _online_port.readline().decode()
+        if res:
+            if res.startswith("$" + "GPRMC") and first_sequence == True:
+                # Created to reverse because the setup is for the shipSim should be changed!!!!!!!!!!!!
+
+                thd_sentence = generate_thd_hsc.generate_thd_sentence(-17)
+                thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                thd_sentence = thd_sentence + "\r\n"
+                thd_sentence = thd_sentence.encode("ascii")
+                _online_port.write(thd_sentence)
+                print(thd_sentence)
+                print("speed set to 8% <=")
+            
+                latitude, longitude = headingStandalone.extract_lat_lon(res)
+                heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                print(" New heading set to ===>")
+                print(heading_calc)
+                hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+                hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+                hsc_sentence = hsc_sentence + "\r\n"
+                hsc_sentence = hsc_sentence.encode("ascii")
+
+                thd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal1"]["l0_speed"])
+                thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                thd_sentence = thd_sentence + "\r\n"
+                thd_sentence = thd_sentence.encode("ascii")
+                _online_port.write(thd_sentence)
+
+                print(hsc_sentence)
+                _online_port.write(hsc_sentence)
+                print("Init")
+                first_sequence = False
+
+            elif res.startswith("$" + "GPRMC"):
+            # TODO: rewrite this, doesn't make any sense to have for loop
+                loop_keep_alive, recovery_sequence = handle_found_sentence(_online_port, 0, res, waypoints, past_waypoints, loop_keep_alive, recovery_sequence)
 
 def setup_input_console(port="COM5"):
     _online_port = ports_module.connect_to_port("COM5")
     print("Setting up input console")
-    def handle_reponses():
-        print("Starting the serial port")
 
-        # Sequences that allow to communicate with SPECTER aka Initialisation
-        start_sequence(_online_port)
-
-        # Recovery sequence during the turn, limits speed on turns
-        first_sequence = True
-        recovery_sequence = False
-        loop_keep_alive = True
-
-        while loop_keep_alive:
-            res = _online_port.readline().decode()
-            if res:
-                if res.startswith("$" + "GPRMC") and first_sequence == True:
-                    # Created to reverse because the setup is for the shipSim should be changed!!!!!!!!!!!!
-
-                    thd_sentence = generate_thd_hsc.generate_thd_sentence(-17)
-                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
-                    thd_sentence = thd_sentence + "\r\n"
-                    thd_sentence = thd_sentence.encode("ascii")
-                    _online_port.write(thd_sentence)
-                    print(thd_sentence)
-                    print("speed set to 8% <=")
-                
-                    latitude, longitude = headingStandalone.extract_lat_lon(res)
-                    heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
-                    print(" New heading set to ===>")
-                    print(heading_calc)
-                    hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
-                    hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
-                    hsc_sentence = hsc_sentence + "\r\n"
-                    hsc_sentence = hsc_sentence.encode("ascii")
-
-                    thd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal1"]["l0_speed"])
-                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
-                    thd_sentence = thd_sentence + "\r\n"
-                    thd_sentence = thd_sentence.encode("ascii")
-                    _online_port.write(thd_sentence)
-
-                    print(hsc_sentence)
-                    _online_port.write(hsc_sentence)
-                    print("Init")
-                    first_sequence = False
-
-            # TODO: decide which flags we need, if only $GPRMC then remote for loop
-            for key, value in input_list_of_cmds.items():
-                    if res.startswith("$" + value):
-                        loop_keep_alive, recovery_sequence = handle_found_sentence(_online_port, key, res, waypoints, past_waypoints, loop_keep_alive, recovery_sequence)
-           
     try:
-        response_thread = threading.Thread(target=handle_reponses)
+        response_thread = threading.Thread(target=handle_responses, args=[_online_port])
         response_thread.start()
 
     except Exception as e:
