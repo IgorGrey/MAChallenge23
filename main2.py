@@ -8,7 +8,7 @@ import distanceFormula
 import headingStandalone
 import json
 import main1
-
+import log_module
 
 with open("config.json", "r") as config_file:
     config = config_file.read()
@@ -30,7 +30,20 @@ def chal2_logic(loop_keep_alive):
 
 
 def handle_both_challenges(_online_port):
-    main1.handle_responses(_online_port)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((config["general"]["server_addr"], config["chal2"]["server_tcp_port"]))
+    
+    while True:
+        tcp_data = sock.recv(1024)
+        ttm_decoded = tcp_data.decode("utf-8")
+        # RMC_port = ports_module.connect_to_port("COM5")
+        log_module.write_to_log_chal2_testing_ttm(ttm_decoded, "./chal2_ttm_test.log")
+
+    # TTM_port = TCP server connect to get TTM commands
+    
+    # 1. If TTM received and it doesnt see any obstacles in the X range, proceed to continue with challenge 1
+    # 2. 
+    # main1.handle_responses(_online_port)
 
 
 def setup_input_console(port="COM5"):

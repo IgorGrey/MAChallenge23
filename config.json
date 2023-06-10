@@ -12,6 +12,7 @@
     }, 
 
     "chal2": {
+        "server_tcp_port": 49700,
         "param2": "param"
     },
 

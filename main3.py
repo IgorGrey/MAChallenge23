@@ -2,7 +2,7 @@ import math
 import distanceFormula
 import main1
 import ports_module
-import main4
+import main4_old
 def autonomously_berth(start_latitude, start_longitude, berthing_points, heading):
     safety_distance = 1.0  # meters
     parallel_threshold = 5.0  # degrees
@@ -56,11 +56,11 @@ def start_program(_online_port):
         res = _online_port.readline().decode()
         if res and res.startswith("$"+"GPRMC"):
         # list of 4 arguments i need only 0 and 2 lat and lon
-            current_location = main4.get_location_coordinates(res)
+            current_location = main4_old.get_location_coordinates(res)
             # Specify the start point coordinates # GET REAL DATA FROM RMC sentences 
             start_latitude = float(current_location[0])
             start_longitude = float(current_location[2])
-            heading = main4.get_heading_degrees(res)
+            heading = main4_old.get_heading_degrees(res)
 
             autonomously_berth(start_latitude, start_longitude, berthing_points, heading)
     
