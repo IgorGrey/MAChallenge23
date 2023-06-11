@@ -192,7 +192,12 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 aprox_epiceter_heading = headingFormula.calculate_heading(last_exit_loc[0],last_exit_loc[1],epiceter_aprox_location_calc[0],epiceter_aprox_location_calc[1])
                 print("HEADING TOWARDS PREDICTED EPICENTER", aprox_epiceter_heading)
 
-                # Write to the list h or v (rewrite)
+                # Empty the lists v & h
+                # decide how to upade threshold - condition?
+                # Update threshhold
+                # rerun algo from start
+                # -------------------------------------------------
+                # Write to the list v
                 # Keep tracking for success condition
                 # Keep trakcing for sig decrease
                 # Once decreased by N make_turn()
