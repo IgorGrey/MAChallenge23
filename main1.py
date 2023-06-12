@@ -147,6 +147,7 @@ def l3_distance(_online_port, lat, lon, waypoints, past_waypoints, speed):
 
 # IMPORTANT this is where the command of interest is passed to
 def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, past_waypoints, loop_keep_alive, recovery_sequence):
+    print(_online_port, sentence_num, nmea_sentence, waypoints, past_waypoints, loop_keep_alive, recovery_sequence)
     # if it is $GPRMC
     if sentence_num == 0:
         lat, lon = headingStandalone.extract_lat_lon(nmea_sentence)
@@ -280,7 +281,6 @@ def handle_responses(_online_port):
                 first_sequence = False
 
             elif res.startswith("$" + "GPRMC"):
-            # TODO: rewrite this, doesn't make any sense to have for loop
                 loop_keep_alive, recovery_sequence = handle_found_sentence(_online_port, 0, res, waypoints, past_waypoints, loop_keep_alive, recovery_sequence)
 
 def setup_input_console(port="COM5"):
