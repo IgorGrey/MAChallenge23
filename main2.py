@@ -24,6 +24,7 @@ waypoints = [50.845, -0.746623, 50.845498, -0.746619,
              50.845475, -0.745747, 50.845278, -0.745642,
              50.844937, -0.745483, 50.84491, -0.746166]
 waypoints.reverse()
+
 past_waypoints = []
 
 obstacles = []
@@ -38,8 +39,8 @@ def get_ttm_smallest_distance(ttm_list):
     min_key = None
 
     for key, distance in ttm_list.items():
-        current_distance = distance[1]
-        if float(current_distance) < min_distance:
+        current_distance = float(distance[1])
+        if current_distance < min_distance:
             min_distance = current_distance
             min_key = key
 
@@ -59,40 +60,71 @@ def check_ttm_distance(ttm_cmd):
     return ttm_distances[dict_key]
     
 
+def get_tcp_data(sock_tcp):
+    tcp_data = sock_tcp.recv(1024)
+    return tcp_data.decode("utf-8")
+
+latest_gprmc = None
+gprmc_lock = threading.Lock()
+
+def get_gprmc_data(_online_port):
+    global latest_gprmc
+
+    while True:
+        gprmc_msg = _online_port.readline().decode()
+
+        with gprmc_lock:
+            latest_gprmc = gprmc_msg
+
 
 def handle_both_challenges(_online_port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((config["general"]["server_addr"], config["chal2"]["server_tcp_port"]))
+    sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock_tcp.connect((config["general"]["server_addr"], config["chal2"]["server_tcp_port"]))
+
+    rmc_thread = threading.Thread(target=get_gprmc_data, args=(_online_port,))
+    rmc_thread.start()
+
+    main1.start_sequence(_online_port)
 
     loop_keep_alive = True
     recovery_sequence = False
     rmc_msg = False
+    set_start_speed = True
+    rmc_msg = ""
     
     while loop_keep_alive:
-        tcp_data = sock.recv(1024)
+        tcp_data = sock_tcp.recv(1024)
         ttm_decoded = tcp_data.decode("utf-8")
 
-        serial_port_msg = _online_port.readline().decode()
-
-        if serial_port_msg.startswith("$GPRMC"):
-           rmc_msg = serial_port_msg 
+        with gprmc_lock:
+            rmc_msg = latest_gprmc
 
 
         if ttm_decoded.startswith("$TTTTM") and rmc_msg:
             # TODO: check the distance for every object, if too close if statement execute
             object_close_prox = check_ttm_distance(ttm_decoded)
-            print("obj close prox", object_close_prox)
+            # print("obj close prox", object_close_prox)
             if float(object_close_prox[1]) <= config["chal2"]["l0_obj_distance"]:
+                print("Close proximity level 0")
                 # Prepare to make a turn
                 pass
                 if float(object_close_prox[1]) <= config["chal2"]["l1_obj_distance"]:
+                    print("Close proximity level 1")
                     # Make a turn
                     pass
 
             else:
+                print("else statement", rmc_msg)
+                if set_start_speed:
+                    print("set speed")
+                    thd_cmd = generate_thd_hsc.generate_thd_sentence(60)
+                    thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
+                    thd_cmd = thd_cmd + "\r\n"
+                    thd_cmd = thd_cmd.encode("ascii")
+                    _online_port.write(thd_cmd)
+                    set_start_speed = False
                 loop_keep_alive, recovery_sequence = main1.handle_found_sentence(_online_port, 0, rmc_msg, waypoints, past_waypoints, loop_keep_alive, recovery_sequence)
 
-        print(serial_port_msg)
         log_module.write_to_log_chal2_testing_ttm(ttm_decoded, "./chal2_ttm_test.log")
 
         # main 1

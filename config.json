@@ -13,9 +13,9 @@
 
     "chal2": {
         "server_tcp_port": 49700,
-        "l0_obj_distance": 0.00269978,
+        "l0_obj_distance": 0.00869978,
         "l0_speed": 18,
-        "l1_obj_distance": 0.0037797,
+        "l1_obj_distance": 0.0067797,
         "l1_speed": 5
     },
 

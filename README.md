@@ -6,10 +6,16 @@ TeamSolent Autopilot project
     a) Show NMEA Debug Window to check the connection
 2. Make sure external coms are enabled
 3. Start the script
-    a) If it doesn't work insert $CCNVO,2,1.0,0,0*4A into input console
+    a) If it doesn't work insert $CCNVO,2,1.0,0,0 into input console
+    b) restart the script
 
 ## Challenge 2 prerequsites
-`Follow Challenge 1 above`
+1. Add targets
+    a) Set speed to 0, which will be displayed as 0.02
+2. Setup new comms for NMEA 0183 with TTM flags
+3. Start the script
+    a) If it doesn't start, insert $CCNVO,2,1.0,0,0 into input console
+    b) Restart the script
 
 ## Challenge 4 prerequsites
 1. Open ShipSim3.
