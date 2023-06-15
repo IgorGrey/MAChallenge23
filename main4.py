@@ -164,8 +164,8 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 epiceter_aprox_location_calc = calculate_fourth_corner(max_sig_value_v_list_record[1],max_sig_value_v_list_record[2],max_sig_value_h_list_record[1],max_sig_value_h_list_record[2],last_exit_loc[0],last_exit_loc[1])
                 print("CALCULATION RESULTS:", epiceter_aprox_location_calc)
                 
-                #set heading towards new location found to specter
-                aprox_epiceter_heading = headingFormula.calculate_heading(last_exit_loc[0],last_exit_loc[1],epiceter_aprox_location_calc[0],epiceter_aprox_location_calc[1])
+                #set heading towards new location found to specter CHECK GPS FORMATS PASSED IN DDM??
+                aprox_epiceter_heading = headingStandalone.calculate_heading(last_exit_loc[0],last_exit_loc[1],epiceter_aprox_location_calc[0],epiceter_aprox_location_calc[1])
                 print("HEADING TOWARDS PREDICTED EPICENTER", aprox_epiceter_heading)
                 #TODO: SEND COMMAND TO SPECTER
                 
@@ -182,6 +182,7 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                             send new speed (speed/algo_iteration)
                             algo_iteration +
                 # DONE
+                # STOP?
                     
             if is_in_plume and same_turn_count == 3 or is_in_plume and same_turn_count == 1:
                 same_turn_count = 4
