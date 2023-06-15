@@ -8,7 +8,9 @@ import distanceFormula
 import headingStandalone
 import json
 import main1
+# import main4
 import log_module
+import haversine_formula
 
 with open("config.json", "r") as config_file:
     config = config_file.read()
@@ -23,11 +25,23 @@ waypoints = [50.845, -0.746623, 50.845498, -0.746619,
              50.845496, -0.745935, 50.845006, -0.745927,
              50.845475, -0.745747, 50.845278, -0.745642,
              50.844937, -0.745483, 50.84491, -0.746166]
+
 waypoints.reverse()
 
 past_waypoints = []
 
 obstacles = []
+
+
+def get_location_coordinates(rmc_cmd):
+    sentence = rmc_cmd.split(",")
+
+    # Make sure the command is GPRMC
+    if sentence[0] == "$GPRMC":
+        # returns North/South degrees, Symbol N or S, West/East degrees, Symbol W or E, heading degrees
+        return [float(sentence[3]), sentence[4], float(sentence[5]), sentence[6], float(sentence[8])]
+    else:
+        return 0
 
 
 def chal2_logic(loop_keep_alive):
@@ -47,13 +61,12 @@ def get_ttm_smallest_distance(ttm_list):
     return min_key
 
 
-
 def check_ttm_distance(ttm_cmd):
     ttm_one_line = ttm_cmd.split("\n")
     ttm_distances = {}
     for line in range(len(ttm_one_line)-1):
         ttm_split = ttm_one_line[line].split(",")
-        ttm_distances[ttm_split[11]] = (ttm_split[11], ttm_split[2], ttm_split[3], ttm_split[14])
+        ttm_distances[ttm_split[11]] = (ttm_split[11], ttm_split[2], ttm_split[3], ttm_split[14], ttm_split[3])
     
     dict_key = get_ttm_smallest_distance(ttm_distances)
 
@@ -67,14 +80,19 @@ def get_tcp_data(sock_tcp):
 latest_gprmc = None
 gprmc_lock = threading.Lock()
 
+
 def get_gprmc_data(_online_port):
     global latest_gprmc
+    rmc_msg = ""
 
     while True:
         gprmc_msg = _online_port.readline().decode()
 
+        if gprmc_msg.startswith("$GPRMC"):
+            rmc_msg = gprmc_msg
+
         with gprmc_lock:
-            latest_gprmc = gprmc_msg
+            latest_gprmc = rmc_msg
 
 
 def handle_both_challenges(_online_port):
@@ -91,6 +109,7 @@ def handle_both_challenges(_online_port):
     rmc_msg = False
     set_start_speed = True
     rmc_msg = ""
+    obj_avoidance_active = False
     
     while loop_keep_alive:
         tcp_data = sock_tcp.recv(1024)
@@ -100,20 +119,44 @@ def handle_both_challenges(_online_port):
             rmc_msg = latest_gprmc
 
 
-        if ttm_decoded.startswith("$TTTTM") and rmc_msg:
+        if ttm_decoded.startswith("$TTTTM") and rmc_msg.startswith("$GPRMC"):
             # TODO: check the distance for every object, if too close if statement execute
             object_close_prox = check_ttm_distance(ttm_decoded)
             # print("obj close prox", object_close_prox)
             if float(object_close_prox[1]) <= config["chal2"]["l0_obj_distance"]:
                 print("Close proximity level 0")
+                if not obj_avoidance_active:
+                    obj_avoidance_active = True
+                    thd_cmd = generate_thd_hsc.generate_thd_sentence(config["chal2"]["l0_speed"])
+                    thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
+                    thd_cmd = thd_cmd + "\r\n"
+                    thd_cmd = thd_cmd.encode("ascii")
+                    _online_port.write(thd_cmd)
+
+                    rmc_msg = get_location_coordinates(rmc_msg)
+                    first_deg = str(rmc_msg[0])
+                    lat_deg = [first_deg[:2], first_deg[2:]]
+                    rmc_msg[0] = haversine_formula.deg_to_decimal_deg(float(lat_deg[0]), float(lat_deg[1]))
+                    new_calc_lat, new_cal_lon = haversine_formula.calulate_new_coords(rmc_msg[0], rmc_msg[2], float(rmc_msg[4]), float(object_close_prox[1]), config["chal2"]["obj_offset"])
+
+                    print("Current location", rmc_msg[0], rmc_msg[2], rmc_msg[4], object_close_prox[1], config["chal2"]["obj_offset"])
+                    print(haversine_formula.calulate_new_coords(rmc_msg[0], rmc_msg[2], float(object_close_prox[4]), float(object_close_prox[1]), config["chal2"]["obj_offset"]))
+
+                heading_calc = headingStandalone.calculate_heading(round(rmc_msg[0], 6), round(rmc_msg[2], 6), round(new_calc_lat, 6), round(new_cal_lon, 6))
+                hsc_cmd = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+                hsc_cmd = hsc_cmd + "*" + main1.calculate_checksum(hsc_cmd [1:])
+                hsc_cmd = hsc_cmd + "\r\n"
+                hsc_cmd = hsc_cmd.encode("ascii")
+                _online_port.write(hsc_cmd)
+
                 # Prepare to make a turn
-                pass
                 if float(object_close_prox[1]) <= config["chal2"]["l1_obj_distance"]:
                     print("Close proximity level 1")
                     # Make a turn
                     pass
 
             else:
+                obj_avoidance_active = False
                 print("else statement", rmc_msg)
                 if set_start_speed:
                     print("set speed")
