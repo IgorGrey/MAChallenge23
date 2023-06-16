@@ -161,6 +161,7 @@ def handle_both_challenges(_online_port):
                         hsc_cmd = hsc_cmd.encode("ascii")
                         _online_port.write(hsc_cmd)
                     if float(object_close_prox[1]) <= config["chal2"]["l2_obj_distance"]:
+                        obj_avoidance_active = False
                         print("Close prox level 2")
 
             else:
