@@ -1,10 +1,8 @@
 import socket
 import threading
-import headingFormula
 import generate_thd_hsc
 import headingStandalone
 import json
-
 import math 
 import distanceFormula
 import main1
