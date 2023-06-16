@@ -137,17 +137,19 @@ def handle_both_challenges(_online_port):
                     first_deg = str(rmc_msg[0])
                     lat_deg = [first_deg[:2], first_deg[2:]]
                     rmc_msg[0] = haversine_formula.deg_to_decimal_deg(float(lat_deg[0]), float(lat_deg[1]))
-                    new_calc_lat, new_cal_lon = haversine_formula.calulate_new_coords(rmc_msg[0], rmc_msg[2], float(rmc_msg[4]), float(object_close_prox[1]), config["chal2"]["obj_offset"])
+                    print(rmc_msg[0], rmc_msg[2])
+                    obj_lat, obj_lon = haversine_formula.calulate_new_coords(rmc_msg[0], rmc_msg[2], float(rmc_msg[4]), float(object_close_prox[1]))
+                    new_calc_lat, new_calc_lon = haversine_formula.calucate_new_waypoint(obj_lat, obj_lon, float(rmc_msg[4]), float(object_close_prox[1]))
+                    print("New waypoint coords", new_calc_lat, new_calc_lon)
 
-                    print("Current location", rmc_msg[0], rmc_msg[2], rmc_msg[4], object_close_prox[1], config["chal2"]["obj_offset"])
-                    print(haversine_formula.calulate_new_coords(rmc_msg[0], rmc_msg[2], float(object_close_prox[4]), float(object_close_prox[1]), config["chal2"]["obj_offset"]))
 
-                heading_calc = headingStandalone.calculate_heading(round(rmc_msg[0], 6), round(rmc_msg[2], 6), round(new_calc_lat, 6), round(new_cal_lon, 6))
-                hsc_cmd = generate_thd_hsc.generate_hsc_sentence(heading_calc)
-                hsc_cmd = hsc_cmd + "*" + main1.calculate_checksum(hsc_cmd [1:])
-                hsc_cmd = hsc_cmd + "\r\n"
-                hsc_cmd = hsc_cmd.encode("ascii")
-                _online_port.write(hsc_cmd)
+                    print(rmc_msg[0], rmc_msg[2], new_calc_lat, new_calc_lon)
+                    heading_calc = headingStandalone.calculate_heading(round(rmc_msg[0], 6), round(rmc_msg[2], 6), round(new_calc_lat, 6), round(new_calc_lon, 6))
+                    hsc_cmd = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+                    hsc_cmd = hsc_cmd + "*" + main1.calculate_checksum(hsc_cmd [1:])
+                    hsc_cmd = hsc_cmd + "\r\n"
+                    hsc_cmd = hsc_cmd.encode("ascii")
+                    _online_port.write(hsc_cmd)
 
                 # Prepare to make a turn
                 if float(object_close_prox[1]) <= config["chal2"]["l1_obj_distance"]:
