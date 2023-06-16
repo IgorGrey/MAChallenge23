@@ -8,7 +8,6 @@ import distanceFormula
 import headingStandalone
 import json
 import main1
-# import main4
 import log_module
 import haversine_formula
 
@@ -163,6 +162,8 @@ def handle_both_challenges(_online_port):
                     if float(object_close_prox[1]) <= config["chal2"]["l2_obj_distance"]:
                         obj_avoidance_active = False
                         print("Close prox level 2")
+                        if float(object_close_prox[1]) <= config["chal2"]["l3_obj_distance"]:
+                            print("Close prox level 3")
 
             else:
                 obj_avoidance_active = False
@@ -239,7 +240,6 @@ def start_program():
             input_console_thread.start()
 
         # Setup listening console from main1.py
-        # There are no differences in code
         elif mode_choice == 2:
             listening_console_thread = threading.Thread(target=main1.setup_listening_console, args=(list_of_ports[1],))
 
