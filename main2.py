@@ -110,6 +110,7 @@ def handle_both_challenges(_online_port):
     set_start_speed = True
     rmc_msg = ""
     obj_avoidance_active = False
+    current_obj_avoidance_id = ""
     
     while loop_keep_alive:
         tcp_data = sock_tcp.recv(1024)
@@ -125,40 +126,46 @@ def handle_both_challenges(_online_port):
             # print("obj close prox", object_close_prox)
             if float(object_close_prox[1]) <= config["chal2"]["l0_obj_distance"]:
                 print("Close proximity level 0")
-                if not obj_avoidance_active:
-                    obj_avoidance_active = True
-                    thd_cmd = generate_thd_hsc.generate_thd_sentence(config["chal2"]["l0_speed"])
-                    thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
-                    thd_cmd = thd_cmd + "\r\n"
-                    thd_cmd = thd_cmd.encode("ascii")
-                    _online_port.write(thd_cmd)
-
-                    rmc_msg = get_location_coordinates(rmc_msg)
-                    first_deg = str(rmc_msg[0])
-                    lat_deg = [first_deg[:2], first_deg[2:]]
-                    rmc_msg[0] = haversine_formula.deg_to_decimal_deg(float(lat_deg[0]), float(lat_deg[1]))
-                    print(rmc_msg[0], rmc_msg[2])
-                    obj_lat, obj_lon = haversine_formula.calulate_new_coords(rmc_msg[0], rmc_msg[2], float(rmc_msg[4]), float(object_close_prox[1]))
-                    new_calc_lat, new_calc_lon = haversine_formula.calucate_new_waypoint(obj_lat, obj_lon, float(rmc_msg[4]), float(object_close_prox[1]))
-                    print("New waypoint coords", new_calc_lat, new_calc_lon)
-
-
-                    print(rmc_msg[0], rmc_msg[2], new_calc_lat, new_calc_lon)
-                    heading_calc = headingStandalone.calculate_heading(round(rmc_msg[0], 6), round(rmc_msg[2], 6), round(new_calc_lat, 6), round(new_calc_lon, 6))
-                    hsc_cmd = generate_thd_hsc.generate_hsc_sentence(heading_calc)
-                    hsc_cmd = hsc_cmd + "*" + main1.calculate_checksum(hsc_cmd [1:])
-                    hsc_cmd = hsc_cmd + "\r\n"
-                    hsc_cmd = hsc_cmd.encode("ascii")
-                    _online_port.write(hsc_cmd)
+                thd_cmd = generate_thd_hsc.generate_thd_sentence(config["chal2"]["l0_speed"])
+                thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
+                thd_cmd = thd_cmd + "\r\n"
+                thd_cmd = thd_cmd.encode("ascii")
+                _online_port.write(thd_cmd)
+                print(object_close_prox)
 
                 # Prepare to make a turn
                 if float(object_close_prox[1]) <= config["chal2"]["l1_obj_distance"]:
                     print("Close proximity level 1")
-                    # Make a turn
-                    pass
+                    if current_obj_avoidance_id != object_close_prox[0]:
+                        obj_avoidance_active = False
+
+                    if not obj_avoidance_active:
+                        obj_avoidance_active = True
+                        current_obj_avoidance_id = object_close_prox[0]
+
+                        rmc_msg = get_location_coordinates(rmc_msg)
+                        first_deg = str(rmc_msg[0])
+                        lat_deg = [first_deg[:2], first_deg[2:]]
+                        rmc_msg[0] = haversine_formula.deg_to_decimal_deg(float(lat_deg[0]), float(lat_deg[1]))
+                        print(rmc_msg[0], rmc_msg[2])
+                        obj_lat, obj_lon = haversine_formula.calulate_new_coords(rmc_msg[0], rmc_msg[2], float(rmc_msg[4]), float(object_close_prox[1]))
+                        new_calc_lat, new_calc_lon = haversine_formula.calucate_new_waypoint(obj_lat, obj_lon, float(rmc_msg[4]), float(object_close_prox[1]))
+                        print("New waypoint coords", new_calc_lat, new_calc_lon)
+
+
+                        print(rmc_msg[0], rmc_msg[2], new_calc_lat, new_calc_lon)
+                        heading_calc = headingStandalone.calculate_heading(round(rmc_msg[0], 6), round(rmc_msg[2], 6), round(new_calc_lat, 6), round(new_calc_lon, 6))
+                        hsc_cmd = generate_thd_hsc.generate_hsc_sentence(heading_calc)
+                        hsc_cmd = hsc_cmd + "*" + main1.calculate_checksum(hsc_cmd [1:])
+                        hsc_cmd = hsc_cmd + "\r\n"
+                        hsc_cmd = hsc_cmd.encode("ascii")
+                        _online_port.write(hsc_cmd)
+                    if float(object_close_prox[1]) <= config["chal2"]["l2_obj_distance"]:
+                        print("Close prox level 2")
 
             else:
                 obj_avoidance_active = False
+                current_obj_avoidance_id = ""
                 print("else statement", rmc_msg)
                 if set_start_speed:
                     print("set speed")
