@@ -8,7 +8,7 @@ import distanceFormula
 import headingStandalone
 import json
 import main1
-import log_module
+# import log_module
 import haversine_formula
 
 with open("config.json", "r") as config_file:
@@ -197,7 +197,7 @@ def handle_both_challenges(_online_port):
 
 
 def setup_input_console(port="COM5"):
-    _online_port = ports_module.connect_to_port("COM5")
+    _online_port = ports_module.connect_to_port(port)
     print("Setting up input console")
 
     try:

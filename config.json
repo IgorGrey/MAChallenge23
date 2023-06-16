@@ -22,6 +22,7 @@
     },
 
     "chal3": {
+        "speed": 20,
         "param3": "param"
     },
 

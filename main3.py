@@ -1,8 +1,34 @@
+import socket
+import threading
+import headingFormula
+import generate_thd_hsc
+import headingStandalone
+import json
+
 import math 
 import distanceFormula
 import main1
 import ports_module
 import main4_old
+
+
+with open("config.json", "r") as config_file:
+    config = config_file.read()
+    config = json.loads(config)
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+def get_location_coordinates(rmc_cmd):
+    sentence = rmc_cmd.split(",")
+
+    # Make sure the command is GPRMC
+    if sentence[0] == "$GPRMC":
+        # degrees, N or S, degrees, W or E, heading
+        return [sentence[3], sentence[4], sentence[5], sentence[6], sentence[8]]
+    else:
+        return 0
+
+
 def autonomously_berth(start_latitude, start_longitude, berthing_points, heading):
     safety_distance = 1.0  # meters
     parallel_threshold = 5.0  # degrees
@@ -44,25 +70,79 @@ def autonomously_berth(start_latitude, start_longitude, berthing_points, heading
         start_longitude = target_longitude
 
 
+def logic_challege_3(_online_port, cmd, keep_loop_alive):
+    if cmd.startswith("$GPRMC"):
+        # rmc_cmd = [degrees, N/S, degrees, W/E, heading]
+        rmc_cmd = get_location_coordinates(cmd)
 
-
-def start_program(_online_port):
-    list_of_ports = ports_module.check_ports()
+    # to send cmd to ship
+    #  keep in mind to add * <checksum> to the command
+    # _online_port.write(command)
+        
     
+    return keep_loop_alive
 
-    loop_keep_alive = True
 
-    while loop_keep_alive:
+def setup_input_console(port="COM5"):
+    _online_port = ports_module.connect_to_port(port)
+    print("Setting up input console")
+
+    keep_loop_alive = True
+
+    while keep_loop_alive:
         res = _online_port.readline().decode()
-        if res and res.startswith("$"+"GPRMC"):
-        # list of 4 arguments i need only 0 and 2 lat and lon
-            current_location = main4_old.get_location_coordinates(res)
-            # Specify the start point coordinates # GET REAL DATA FROM RMC sentences 
-            start_latitude = float(current_location[0])
-            start_longitude = float(current_location[2])
-            heading = main4_old.get_heading_degrees(res)
+        print(res)
+        try:
+            keep_loop_alive = logic_challege_3(_online_port, res, keep_loop_alive)
+        
+        except Exception as e:
+            print("Exception in logic ", e)
 
-            autonomously_berth(start_latitude, start_longitude, berthing_points, heading)
+
+
+def start_program():
+    list_of_ports = ports_module.check_ports()
+
+    try:
+        input_console_thread = threading.Thread(target=setup_input_console)
+        listening_console_thread = threading.Thread()
+
+        print("Choose mode:\n1. Input console\n2. Listening console")
+
+        try:
+            mode_choice = int(input())
+
+        except:
+            exit()
+
+        if mode_choice == 1:
+            input_console_thread.start()
+
+        # Setup listening console from main1.py
+        elif mode_choice == 2:
+            listening_console_thread = threading.Thread(target=main1.setup_listening_console, args=(list_of_ports[1],))
+
+        else:
+            print(f"Option not available {mode_choice}")
+            exit()
+
+    except OSError as oe:
+        print("There is a problem with configuring the port", oe)
+
+
+    # loop_keep_alive = True
+
+    # while loop_keep_alive:
+    #     res = _online_port.readline().decode()
+    #     if res and res.startswith("$"+"GPRMC"):
+    #     # list of 4 arguments i need only 0 and 2 lat and lon
+    #         current_location = main4_old.get_location_coordinates(res)
+    #         # Specify the start point coordinates # GET REAL DATA FROM RMC sentences 
+    #         start_latitude = float(current_location[0])
+    #         start_longitude = float(current_location[2])
+    #         heading = main4_old.get_heading_degrees(res)
+
+    #         autonomously_berth(start_latitude, start_longitude, berthing_points, heading)
     
 
 
