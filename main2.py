@@ -20,10 +20,35 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 def send_cmd(cmd):
     sock.sendto(cmd, (config["general"]["server_addr"], config["general"]["opencpn_udp_port"]))
 
-waypoints = [50.845, -0.746623, 50.845498, -0.746619,
-             50.845496, -0.745935, 50.845006, -0.745927,
-             50.845475, -0.745747, 50.845278, -0.745642,
-             50.844937, -0.745483, 50.84491, -0.746166]
+# Presentation
+# waypoints = [50.845, -0.746623, 50.845498, -0.746619,
+#              50.845496, -0.745935, 50.845006, -0.745927,
+#              50.845475, -0.745747, 50.845278, -0.745642,
+#              50.844937, -0.745483, 50.84491, -0.746166]
+
+# Finals waypoints version 1.0
+# waypoints = [
+#     51.014649, -1.495722,
+#     51.015011, -1.494879,
+#     51.014866, -1.494654,
+#     51.014565, -1.495291,
+#     51.014782, -1.494577,
+#     51.014675, -1.494435,
+#     51.014323, -1.495377,
+#     51.014573, -1.495857
+# ]
+
+# Finals waypoints version 2.0
+waypoints = [
+51.014682,-1.495768
+51.015044, -1.494925
+51.014899, -1.494699
+51.014597, -1.495337
+51.014814, -1.494623
+51.014708, -1.494481
+51.014355, -1.495423
+51.014605, -1.495902
+]
 
 waypoints.reverse()
 
@@ -96,7 +121,7 @@ def get_gprmc_data(_online_port):
 
 def handle_both_challenges(_online_port):
     sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock_tcp.connect((config["general"]["server_addr"], config["chal2"]["server_tcp_port"]))
+    sock_tcp.connect((config["chal2"]["server_tcp_addr"], config["chal2"]["server_tcp_port"]))
 
     rmc_thread = threading.Thread(target=get_gprmc_data, args=(_online_port,))
     rmc_thread.start()

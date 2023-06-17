@@ -1,12 +1,22 @@
 import math
 
-def convert_gps_format(gps_format):
+def convert_gps_format_lat(gps_format):
     """
     Converts GPS coordinates from degree and decimal minute format to decimal degree format.
     Example: 5050.710799,N -> 50.84517998333333
     """
     degrees = float(gps_format[:2])
     minutes = float(gps_format[2:])
+    decimal_degrees = degrees + (minutes / 60.0)
+    return round(decimal_degrees, 7)
+
+def convert_gps_format_lon(gps_format):
+    """
+    Converts GPS coordinates from degree and decimal minute format to decimal degree format.
+    Example: 5050.710799,N -> 50.84517998333333
+    """
+    degrees = float(gps_format[:3])
+    minutes = float(gps_format[3:])
     decimal_degrees = degrees + (minutes / 60.0)
     return round(decimal_degrees, 7)
 
@@ -19,10 +29,10 @@ def extract_lat_lon(nmea_sentence):
     lon = 0.0
     if nmea_sentence.find("GPRMC") > 0:
         data = nmea_sentence.split(",")
-        lat = convert_gps_format(data[3])
+        lat = convert_gps_format_lat(data[3])
         if data[4] == "S":
             lat = -lat
-        lon = convert_gps_format(data[5])
+        lon = convert_gps_format_lon(data[5])
         if data[6] == "W":
             lon = -lon
     return round(lat, 6), round(lon, 6)
