@@ -19,7 +19,6 @@ import json
 # to be registered in the next sentence activating next part of the code, completed
 
 # $CCTHD,85.00,0.00,0.00,0.00,0.00,85.00,0.00,0.00
-v_list, h_list = [], []
 
 with open("config.json", "r") as config_file:
     config = config_file.read()
@@ -120,51 +119,86 @@ def make_turn(same_turn_count, turn_dir, current_heading):
     return same_turn_count, turn_dir
 
 
+min_threshold = config["chal4"]["threshold"] # GRAB FROM CONFIG AND ASSING TO THIS VAR, USED LATER
+min_threshold = 85
+speed = config["chal4"]["plume_explore_speed"] # plume_explore_speed #  CHECK DOM-------------------------------------------- if corretly assigned
+v_list = []
+h_list = []
+e_list = []
+algo_iteration = 0
+
 def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
-                     same_turn_count, turn_dir, last_exit_loc):
-    # print(is_in_plume)
-    # print(sig_cmd, rmc_cmd)
-    global v_list, h_list
-    # Leave plume sequence
+                    v_list, h_list, same_turn_count, turn_dir, last_exit_loc):
+    # Left plume sequence
     if is_in_plume and new_plume_sequence == 0:
         if float(sig_cmd) < config["chal4"]["threshold"]:
             print("Exit")
-            last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
+            # grab current loc,
+            # ------------------------------ 17 JUNE CHANGE ----------------------------  last_exit_loc should be not list 
+            # but normal var containing [lat, lon] - every iterration will rewrite values
+            # last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
+            last_exit_loc = [[rmc_cmd[0], rmc_cmd[2]]
 
             if len(v_list) >= 2 and len(h_list) >= 2:
                 #last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
                 
                 # max_sig_value_v_list_record, max_sig_value_h_list_record extracted from list and consists of [SIG value(float), Lat, Lon]
                 max_sig_value_v_list_record = max(v_list)
-                print("V_LIST MAX", max_sig_value_v_list_record)
+                #print("V_LIST MAX", max_sig_value_v_list_record)
                 max_sig_value_h_list_record =  max(h_list)
-                print("H_LIST MAX", max_sig_value_h_list_record)
+                #print("H_LIST MAX", max_sig_value_h_list_record)
 
                 #run forth corner func and save to variable
+                # takes 6 parameters, 3 gps locs
                 epiceter_aprox_location_calc = calculate_fourth_corner(max_sig_value_v_list_record[1],max_sig_value_v_list_record[2],max_sig_value_h_list_record[1],max_sig_value_h_list_record[2],last_exit_loc[0],last_exit_loc[1])
                 print("CALCULATION RESULTS:", epiceter_aprox_location_calc)
                 
-                #set heading towards new location found to specter
-                aprox_epiceter_heading = headingFormula.calculate_heading(last_exit_loc[0],last_exit_loc[1],epiceter_aprox_location_calc[0],epiceter_aprox_location_calc[1])
+                #set heading towards new location found to specter CHECK GPS FORMATS PASSED IN DDM??
+                aprox_epiceter_heading = headingStandalone.calculate_heading(last_exit_loc[0],last_exit_loc[1],epiceter_aprox_location_calc[0],epiceter_aprox_location_calc[1])
                 print("HEADING TOWARDS PREDICTED EPICENTER", aprox_epiceter_heading)
+                 
+                # After calculating heading, send it as HSC
+                hsc_sentence = generate_thd_hsc.generate_hsc_sentence(aprox_epiceter_heading)
+                hsc_sentence = hsc_sentence + "*" + main1.calculate_checksum(hsc_sentence[1:])
+                hsc_sentence = hsc_sentence + "\r\n"
+                hsc_sentence = hsc_sentence.encode("ascii")
+                print(hsc_sentence)
+                send_cmd_to_system(hsc_sentence)
 
-                # Empty the lists v & h
-                # decide how to upade threshold - condition?
-                # Update threshhold
-                # rerun algo from start
-                # -------------------------------------------------
-                # Write to the list v
-                # Keep tracking for success condition
-                # Keep trakcing for sig decrease
-                # Once decreased by N make_turn()
-                # When lowers for n time/distance rerun whole thing with updated threshold
-                # Check for max sig when
-                
-                # TODO: CONCERN that loop is not nessesery within the function because function will be called some many times
-                
-                # make sure whole algo repeatable to be able to narrow down the search area
-                # make sure some variable reseted and list emptied before repeating algo
+                # reduce speed every itteration or algo , global speed has to update at the end
+                new_speed = speed / (algo_iteration * 1)   # updates global var, speed reduction every iterration or aglo() func
+    
+                thd_cmd = generate_thd_hsc.generate_thd_sentence(new_speed)
+                thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
+                thd_cmd = thd_cmd + "\r\n"
+                thd_cmd = thd_cmd.encode("ascii")
+                _online_port.write(thd_cmd)
+                #generate_thd_sentence() ------  OR  ------------ _online_port.write(thd_cmd)
 
+                # Keep tracking for sig decrease
+                new_min_theshold = 80 # temp, will change after first few records in list_e, allows while loop to run
+
+                if sig_cmd >= max_threshold : # sig is 85 or more
+                    break
+                elif:
+                    while sig_cmd<(new_min_theshold - 5):
+                        # Keep track for success condition
+                        if sig_cmd >= max_threshold : # sig is 85 or more
+                            break
+                        else:
+                            # Keep tracking for sig decrease
+                            e_list.append(sig, rmc, rmc) # add index rmc
+                            new_min_theshold = max(e_list)
+                else:
+                    # Empty the lists as prep for next itteration of algo()
+                    v_list = []
+                    h_list = []
+                    e_list = []
+                    make_turn() # parameter?
+                    min_threshold = new_min_theshold 
+                    algo_iteration +
+                    algo_challenge4() ### call agin to repeat whole sequence, with diffirence of updated global var min_threshold --- need parameters?
+            
             #-------------------------------
             if is_in_plume and same_turn_count == 3 or is_in_plume and same_turn_count == 1:
                 same_turn_count = 4
