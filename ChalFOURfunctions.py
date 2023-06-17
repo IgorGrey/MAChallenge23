@@ -95,13 +95,13 @@ turn_direction = -1  # -1 for left, 1 for right
     # Code to read SIG value every second
     #return sig_value, gps_location
 
-def make_turn():
+def make_turn(rmc_):
     global same_turn_count, turn_direction, #grab current heading from recent RMC OR FEC sentence
     #calulate new heading by adding 90 for right turn and subtract 90 for left turn to/from current heading and normalizing by calling calculate_within_360(current heading -/+ 90)
-    new_heading = #grab current heading
-    if turn_direction = -1:
+    new_heading = # grab current heading
+    if turn_direction == -1:
         new_heading = current_heading - 90
-    else turn_direction = 1:
+    elif turn_direction == 1:
         new_heading = current_heading + 90
     calculate_within_360(new_heading)
     # Implement logic to update same_turn_count and turn_direction variables accordingly

@@ -1,6 +1,6 @@
 # import serial
 import socket
-import ports_module 
+import ports_module
 # import subprocess
 import threading
 # import re
@@ -19,7 +19,7 @@ import distanceFormula
 import headingStandalone
 import json
 
-# import pyais automatic identification system 
+# import pyais automatic identification system
 # json config file
 with open("config.json", "r") as config_file:
     config = config_file.read()
@@ -27,8 +27,10 @@ with open("config.json", "r") as config_file:
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+
 def send_cmd(cmd):
-    sock.sendto(cmd, (config["general"]["server_addr"], config["general"]["opencpn_udp_port"]))
+    sock.sendto(cmd, (config["general"]["server_addr"],
+                config["general"]["opencpn_udp_port"]))
 
 
 heading_found = False
@@ -38,6 +40,7 @@ heading_found = False
 #              50.845475, -0.745747, 50.845278, -0.745642,
 #              50.844937, -0.745483, 50.84491, -0.746166]
 
+<<<<<<< HEAD
 # Finals waypoints version 1.0
 # waypoints = [
 #     51.014649, -1.495722,
@@ -60,6 +63,20 @@ waypoints = [
 51.014708, -1.494481
 51.014355, -1.495423
 51.014605, -1.495902
+=======
+# Finals waypoints
+
+waypoints = [
+    51.014682, -1.495768,
+    51.015044, -1.494925,
+    51.014899, -1.494699,
+    51.014597, -1.495337,
+    51.014814, -1.494623,
+    51.014708, -1.494481,
+    51.014355, -1.495423,
+    51.014605, -1.495902,
+    51.014682, -1.495768,
+>>>>>>> fdf4d4318486d829518d40a1a59db81c6654aa92
 ]
 
 waypoints.reverse()
@@ -68,13 +85,15 @@ past_waypoints = []
 
 obsticles = []
 
+
 def calculate_checksum(sentence):
     checksum = 0
 
     for byte in sentence:
         checksum ^= ord(byte)
-        
+
     return f"{checksum:02X}"
+
 
 def try_checksum(checksum):
     sentence = checksum.split("*")
@@ -104,8 +123,10 @@ def check_input_sentence(nmea_sentence):
 
 
 # IMPORTANT! Add which command you want to extract
-input_list_of_cmds = {0: "GPRMC", 1: "THD...", 2: "OBST", 3: "BRTH", 4: "POLL", 5: "OBJT"}
+input_list_of_cmds = {0: "GPRMC", 1: "THD...",
+                      2: "OBST", 3: "BRTH", 4: "POLL", 5: "OBJT"}
 listening_list_of_cmds = ["$GPRMC",]
+
 
 def start_sequence(_online_port):
     # cmd_1 = "$CCNVO,2,1.0,0,0" # $CCNVO,2,1.0,0,0*4A
@@ -113,21 +134,22 @@ def start_sequence(_online_port):
     # cmd_1 = cmd_1 + "\r\n"
     # cmd_1 = cmd_1.encode("ascii")
     # _online_port.write(cmd_1)
-    
+
     cmd_2 = "$CCAPM,0,64,0,80"
     cmd_2 = cmd_2 + "*" + calculate_checksum(cmd_2[1:])
     cmd_2 = cmd_2 + "\r\n"
     cmd_2 = cmd_2.encode("ascii")
     _online_port.write(cmd_2)
-    
+
     cmd_3 = "$CCAPM,7,64,0,80"
     cmd_3 = cmd_3 + "*" + calculate_checksum(cmd_3[1:])
     cmd_3 = cmd_3 + "\r\n"
     cmd_3 = cmd_3.encode("ascii")
     _online_port.write(cmd_3)
 
+
 def swap_last_waypoints(past_waypoints):
-    past_waypoints[-1], past_waypoints[-2] = past_waypoints[-2], past_waypoints[-1] 
+    past_waypoints[-1], past_waypoints[-2] = past_waypoints[-2], past_waypoints[-1]
 
 
 def heading_notice_distance(_online_port, speed):
@@ -139,7 +161,8 @@ def heading_notice_distance(_online_port, speed):
 
 
 def heading_slowdown_distance(_online_port, lat, lon, waypoints):
-    heading_calc = headingFormula.calculate_heading(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+    heading_calc = headingFormula.calculate_heading(
+        lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
     hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
     hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
     hsc_sentence = hsc_sentence + "\r\n"
@@ -151,7 +174,8 @@ def l3_distance(_online_port, lat, lon, waypoints, past_waypoints, speed):
     past_waypoints.append(waypoints.pop())
     past_waypoints.append(waypoints.pop())
     swap_last_waypoints(past_waypoints)
-    heading_calc = headingFormula.calculate_heading(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+    heading_calc = headingFormula.calculate_heading(
+        lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
     print("-----------------------------")
     print("Current waypoint reached")
     print("Heading to the next Waypoint")
@@ -176,10 +200,13 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
     # if it is $GPRMC
     if sentence_num == 0:
         lat, lon = headingStandalone.extract_lat_lon(nmea_sentence)
-        distance = distanceFormula.calculate_distance(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
-        heading_calc = headingFormula.calculate_heading(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])        
+        distance = distanceFormula.calculate_distance(
+            lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+        heading_calc = headingFormula.calculate_heading(
+            lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
         hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
-        hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+        hsc_sentence = hsc_sentence + "*" + \
+            calculate_checksum(hsc_sentence[1:])
         hsc_sentence = hsc_sentence + "\r\n"
         hsc_sentence = hsc_sentence.encode("ascii")
         _online_port.write(hsc_sentence)
@@ -196,10 +223,11 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
                 heading_slowdown_distance(_online_port, lat, lon, waypoints)
 
                 print("1st If statement", len(waypoints))
-                
+
                 # The current waypoint is reached
                 if distance <= config["chal1"]["l3_distance"]:
-                    waypoints, past_waypoints = l3_distance(_online_port, lat, lon, waypoints, past_waypoints, config["chal1"]["l3_speed"])
+                    waypoints, past_waypoints = l3_distance(
+                        _online_port, lat, lon, waypoints, past_waypoints, config["chal1"]["l3_speed"])
                     recovery_sequence = True
 
             # When the boat approaching the last waypoint
@@ -211,25 +239,26 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
                 if distance <= config["chal1"]["l3_stop_thrust_distance"]:
                     print("Stop thrust boat logic")
                     thd_sentence = generate_thd_hsc.generate_thd_sentence(0)
-                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                    thd_sentence = thd_sentence + "*" + \
+                        calculate_checksum(thd_sentence[1:])
                     thd_sentence = thd_sentence + "\r\n"
                     thd_sentence = thd_sentence.encode("ascii")
                     _online_port.write(thd_sentence)
                     past_waypoints.append(waypoints.pop())
                     past_waypoints.append(waypoints.pop())
                     loop_keep_alive = False
-                    
 
                 elif distance <= config["chal1"]["l3_distance"]:
                     print("Stop the boat logic", len(waypoints))
                     # Stop the boat
-                    thd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal1"]["last_l3_speed"])
-                    thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                    thd_sentence = generate_thd_hsc.generate_thd_sentence(
+                        config["chal1"]["last_l3_speed"])
+                    thd_sentence = thd_sentence + "*" + \
+                        calculate_checksum(thd_sentence[1:])
                     thd_sentence = thd_sentence + "\r\n"
                     thd_sentence = thd_sentence.encode("ascii")
                     _online_port.write(thd_sentence)
-                
-        
+
         elif len(waypoints) == 0:
             print("-----------------------------")
             print("The last waypoint has been reached")
@@ -238,19 +267,24 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
 
         # Function to slow down when doing turn to a new waypoint
         elif recovery_sequence:
-            recovery_distance = distanceFormula.calculate_distance(lat, lon, past_waypoints[-1], past_waypoints[-2])
+            recovery_distance = distanceFormula.calculate_distance(
+                lat, lon, past_waypoints[-1], past_waypoints[-2])
             # print("Recovery distance", recovery_distance)
             if recovery_distance >= config["chal1"]["l3_recovery_distance"]:
-                forward_thrust = generate_thd_hsc.generate_thd_sentence(config["chal1"]["l0_speed"])
-                forward_thrust = forward_thrust + "*" + calculate_checksum(forward_thrust[1:])
+                forward_thrust = generate_thd_hsc.generate_thd_sentence(
+                    config["chal1"]["l0_speed"])
+                forward_thrust = forward_thrust + "*" + \
+                    calculate_checksum(forward_thrust[1:])
                 forward_thrust = forward_thrust + "\r\n"
                 forward_thrust = forward_thrust.encode("ascii")
                 _online_port.write(forward_thrust)
                 recovery_sequence = False
-            
+
             else:
-                forward_thrust = generate_thd_hsc.generate_thd_sentence(config["chal1"]["l3_speed"])
-                forward_thrust = forward_thrust + "*" + calculate_checksum(forward_thrust[1:])
+                forward_thrust = generate_thd_hsc.generate_thd_sentence(
+                    config["chal1"]["l3_speed"])
+                forward_thrust = forward_thrust + "*" + \
+                    calculate_checksum(forward_thrust[1:])
                 forward_thrust = forward_thrust + "\r\n"
                 forward_thrust = forward_thrust.encode("ascii")
                 _online_port.write(forward_thrust)
@@ -259,6 +293,7 @@ def handle_found_sentence(_online_port, sentence_num, nmea_sentence, waypoints, 
         send_cmd(nmea_sentence.encode("ascii"))
 
         return loop_keep_alive, recovery_sequence
+
 
 def handle_responses(_online_port):
     print("Starting the serial port")
@@ -279,24 +314,30 @@ def handle_responses(_online_port):
                 # Created to reverse because the setup is for the shipSim should be changed!!!!!!!!!!!!
 
                 thd_sentence = generate_thd_hsc.generate_thd_sentence(-17)
-                thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                thd_sentence = thd_sentence + "*" + \
+                    calculate_checksum(thd_sentence[1:])
                 thd_sentence = thd_sentence + "\r\n"
                 thd_sentence = thd_sentence.encode("ascii")
                 _online_port.write(thd_sentence)
                 print(thd_sentence)
                 print("speed set to 8% <=")
-            
+
                 latitude, longitude = headingStandalone.extract_lat_lon(res)
-                heading_calc = headingFormula.calculate_heading(latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+                heading_calc = headingFormula.calculate_heading(
+                    latitude, longitude, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
                 print(" New heading set to ===>")
                 print(heading_calc)
-                hsc_sentence = generate_thd_hsc.generate_hsc_sentence(heading_calc)
-                hsc_sentence = hsc_sentence + "*" + calculate_checksum(hsc_sentence[1:])
+                hsc_sentence = generate_thd_hsc.generate_hsc_sentence(
+                    heading_calc)
+                hsc_sentence = hsc_sentence + "*" + \
+                    calculate_checksum(hsc_sentence[1:])
                 hsc_sentence = hsc_sentence + "\r\n"
                 hsc_sentence = hsc_sentence.encode("ascii")
 
-                thd_sentence = generate_thd_hsc.generate_thd_sentence(config["chal1"]["l0_speed"])
-                thd_sentence = thd_sentence + "*" + calculate_checksum(thd_sentence[1:])
+                thd_sentence = generate_thd_hsc.generate_thd_sentence(
+                    config["chal1"]["l0_speed"])
+                thd_sentence = thd_sentence + "*" + \
+                    calculate_checksum(thd_sentence[1:])
                 thd_sentence = thd_sentence + "\r\n"
                 thd_sentence = thd_sentence.encode("ascii")
                 _online_port.write(thd_sentence)
@@ -307,19 +348,22 @@ def handle_responses(_online_port):
                 first_sequence = False
 
             elif res.startswith("$" + "GPRMC"):
-                loop_keep_alive, recovery_sequence = handle_found_sentence(_online_port, 0, res, waypoints, past_waypoints, loop_keep_alive, recovery_sequence)
+                loop_keep_alive, recovery_sequence = handle_found_sentence(
+                    _online_port, 0, res, waypoints, past_waypoints, loop_keep_alive, recovery_sequence)
+
 
 def setup_input_console(port=config["general"]["input_port"]):
-    _online_port = ports_module.connect_to_port(config["general"]["input_port"])
+    _online_port = ports_module.connect_to_port(
+        config["general"]["input_port"])
     print("Setting up input console")
 
     try:
-        response_thread = threading.Thread(target=handle_responses, args=[_online_port])
+        response_thread = threading.Thread(
+            target=handle_responses, args=[_online_port])
         response_thread.start()
 
     except Exception as e:
         print("Line 206 listening error:", e)
-
 
     while True:
         try:
@@ -328,7 +372,7 @@ def setup_input_console(port=config["general"]["input_port"]):
                 pass
             else:
                 checksum = calculate_checksum(new_cmd[1:])
-                new_cmd = new_cmd + "*" +  checksum
+                new_cmd = new_cmd + "*" + checksum
                 new_cmd = f"{new_cmd}\r\n".encode("ascii")
                 if new_cmd:
                     _online_port.write(new_cmd)
@@ -336,7 +380,8 @@ def setup_input_console(port=config["general"]["input_port"]):
         except:
             print("Error has occured")
             continue
-        
+
+
 def setup_listening_console(port=config["general"]["listen_port"], baudrate=115200):
     _online_port = ports_module.connect_to_port(port)
     while True:
@@ -346,7 +391,7 @@ def setup_listening_console(port=config["general"]["listen_port"], baudrate=1152
             nmea_res = pynmea2.parse(response)
         except pynmea2.ParseError as pynmea_res:
             continue
-    
+
         if nmea_res.sentence_type == "RMC":
             tkp = nmea_res.talker_id, nmea_res.datestamp, nmea_res.latitude, nmea_res.longitude
 
@@ -357,8 +402,10 @@ def start_program():
     list_of_ports = ports_module.check_ports()
 
     try:
-        input_console_thread = threading.Thread(target=setup_input_console, args=(list_of_ports[0],))
-        listening_console_thread = threading.Thread(target=setup_listening_console, args=(list_of_ports[1],))
+        input_console_thread = threading.Thread(
+            target=setup_input_console, args=(list_of_ports[0],))
+        listening_console_thread = threading.Thread(
+            target=setup_listening_console, args=(list_of_ports[1],))
 
         print("Choose mode:\n1. Input console\n2. Listening console")
         try:
@@ -373,10 +420,9 @@ def start_program():
         else:
             print(f"Option not available {mode_choice}")
             exit()
-    
+
     except OSError as oe:
         print("There is a problem with configuring the port", oe)
-    
 
 
 if __name__ == "__main__":

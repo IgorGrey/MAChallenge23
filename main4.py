@@ -3,13 +3,12 @@ import ports_module
 import threading
 import pynmea2
 from datetime import datetime
-import headingFormula
 import generate_thd_hsc
 import distanceFormula
 import headingStandalone
-import aprox_location_epicentre
 import main1
 import json
+import ChalFOURfunctions
 
 # TODO: create json with config for threshold of pollution, completed
 # TODO: make sure the ship takes turn first, then makes decision
@@ -50,7 +49,7 @@ def get_location_coordinates(rmc_cmd):
     # Make sure the command is GPRMC
     if sentence[0] == "$GPRMC":
         # returns North/South degrees, Symbol N or S, West/East degrees, Symbol W or E, heading degrees
-        return [sentence[3], sentence[4], sentence[5], sentence[6], sentence[8]]
+        return [float(sentence[3]), sentence[4], float(sentence[5]), sentence[6], float(sentence[8])]
     else:
         return 0
 
@@ -88,6 +87,7 @@ def reset_heading():
 
 # This is where we do the Igor's algorithm, we have the info we need at the interval of 1 second
 
+
 def calculate_within_360(value):
     value %= 360
     if value < 0:
@@ -120,7 +120,7 @@ def make_turn(same_turn_count, turn_dir, current_heading):
 
 
 min_threshold = config["chal4"]["threshold"] # GRAB FROM CONFIG AND ASSING TO THIS VAR, USED LATER
-min_threshold = 85
+max_threshold = 90
 speed = config["chal4"]["plume_explore_speed"] # plume_explore_speed #  CHECK DOM-------------------------------------------- if corretly assigned
 v_list = []
 h_list = []
@@ -131,13 +131,10 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                     v_list, h_list, same_turn_count, turn_dir, last_exit_loc):
     # Left plume sequence
     if is_in_plume and new_plume_sequence == 0:
-        if float(sig_cmd) < config["chal4"]["threshold"]:
+        if float(sig_cmd) < min_threshold:
             print("Exit")
-            # grab current loc,
-            # ------------------------------ 17 JUNE CHANGE ----------------------------  last_exit_loc should be not list 
-            # but normal var containing [lat, lon] - every iterration will rewrite values
-            # last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
-            last_exit_loc = [rmc_cmd[0], rmc_cmd[2]]
+            
+            last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
 
             if len(v_list) >= 2 and len(h_list) >= 2:
                 #last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
@@ -145,15 +142,15 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 # max_sig_value_v_list_record, max_sig_value_h_list_record extracted from list and consists of [SIG value(float), Lat, Lon]
                 max_sig_value_v_list_record = max(v_list)
                 #print("V_LIST MAX", max_sig_value_v_list_record)
-                max_sig_value_h_list_record =  max(h_list)
+                max_sig_value_h_list_record = max(h_list)
                 #print("H_LIST MAX", max_sig_value_h_list_record)
 
                 #run forth corner func and save to variable
                 # takes 6 parameters, 3 gps locs
-                epiceter_aprox_location_calc = calculate_fourth_corner(max_sig_value_v_list_record[1],max_sig_value_v_list_record[2],max_sig_value_h_list_record[1],max_sig_value_h_list_record[2],last_exit_loc[0],last_exit_loc[1])
+                epiceter_aprox_location_calc = ChalFOURfunctions.calculate_fourth_corner(max_sig_value_v_list_record[1],max_sig_value_v_list_record[2],max_sig_value_h_list_record[1],max_sig_value_h_list_record[2],last_exit_loc[0],last_exit_loc[1])
                 print("CALCULATION RESULTS:", epiceter_aprox_location_calc)
                 
-                #set heading towards new location found to specter CHECK GPS FORMATS PASSED IN DDM??
+                # Set heading towards new location found to specter CHECK GPS FORMATS PASSED IN DDM??
                 aprox_epiceter_heading = headingStandalone.calculate_heading(last_exit_loc[0],last_exit_loc[1],epiceter_aprox_location_calc[0],epiceter_aprox_location_calc[1])
                 print("HEADING TOWARDS PREDICTED EPICENTER", aprox_epiceter_heading)
                  
@@ -165,21 +162,22 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 print(hsc_sentence)
                 send_cmd_to_system(hsc_sentence)
 
-                # reduce speed every itteration or algo , global speed has to update at the end
+                # reduce speed every itteration or algo, global speed has to update at the end
                 new_speed = speed / (algo_iteration * 1)   # updates global var, speed reduction every iterration or aglo() func
     
                 thd_cmd = generate_thd_hsc.generate_thd_sentence(new_speed)
                 thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
                 thd_cmd = thd_cmd + "\r\n"
                 thd_cmd = thd_cmd.encode("ascii")
+                print(thd_cmd)
                 send_cmd_to_system(thd_cmd)
                 #generate_thd_sentence() ------  OR  ------------ _online_port.write(thd_cmd)
 
                 # Keep tracking for sig decrease
-                new_min_theshold = 80 # temp, will change after first few records in list_e, allows while loop to run
+                new_min_theshold = 85 # temp, will change after first few records in list_e, allows while loop to run
 
                 if sig_cmd >= max_threshold : # sig is 85 or more
-                    break
+                    print("@REACHED EPICENTER@---90")
                 elif:
                     while sig_cmd<(new_min_theshold - 5):
                         # Keep track for success condition
