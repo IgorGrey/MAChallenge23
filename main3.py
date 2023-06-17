@@ -27,7 +27,7 @@ def get_location_coordinates(rmc_cmd):
     # Make sure the command is GPRMC
     if sentence[0] == "$GPRMC":
         # degrees, N or S, degrees, W or E, heading
-        return [sentence[3], sentence[4], sentence[5], sentence[6], sentence[8]]
+        return [float(sentence[3]), sentence[4], float(sentence[5]), sentence[6], float(sentence[8])]
     else:
         return 0
 
@@ -147,8 +147,10 @@ all_berth_data = [["Berth 1-1",(-1.4956263, 51.0146539),(-1.4958094, 51.0147379)
 
 chosen_berth = [] # [berth_name, save_wpnt, wpnt1, wpnt2, wpnt3]
 middleWpntSafeArea = [(-1.4953089, 51.0147121), (-1.4949817, 51.0148386), (-1.4947268, 51.0149517)]
-actuallyClosestSafeWpnt = []
-recommended_speed = config["chal3"]["l0_speed"] # GRAB FROM CONFIG AND ASSING TO THIS VAR, USED LATER
+
+actuallyClosestSafeWpnt = [] 
+
+recommended_speed = config["chal3"]["speed"] # GRAB FROM CONFIG AND ASSING TO THIS VAR, USED LATER
 #----------------------------------------------------------------------------
 
 given_berth_name = "Berth 1-1" # GIVEN BY ORGANISIRES! ENTER WITH CAUTION, USE CAPITAL FIRST LETTER!
@@ -158,19 +160,19 @@ given_berth_name = "Berth 1-1" # GIVEN BY ORGANISIRES! ENTER WITH CAUTION, USE C
 def rads_jebany_function(rmc_cmd):
     closestSafeAreaWpnts = [] # [[meters, lon, lat]] 
     for safeAreaWpnt in safeAreaWpnts:
-        m = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2], safeAreaWpnt[1], safeAreaWpnt[0]) # or safeAreaWpnt[0],safeAreaWpnt[1]
+        m = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2], safeAreaWpnt[1], safeAreaWpnt[0])
         closestSafeAreaWpnts.append(m,safeAreaWpnt[0],safeAreaWpnt[1])
-    actuallyClosestSafeWpnt = min(closestSafeAreaWpnts) # [meters,lon,lat]
+    actuallyClosestSafeWpnt = min(closestSafeAreaWpnts) # [meters,lon,lat] -- Closest saveAreaWptn to the boat
     
     closestMiddleSafeAreaWpnts = [] # [[meters, lat, lon]]
     for wpnt in middleWpntSafeArea:
         w = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2], wpnt[1], wpnt[0]) # or  wpnt[0], wpnt[1]
         closestMiddleSafeAreaWpnts.append(w, wpnt[0], wpnt[1])
-    actuallyMiddleClosestSafeWpnt = min(closestMiddleSafeAreaWpnts)
+    actuallyMiddleClosestSafeWpnt = min(closestMiddleSafeAreaWpnts) # meters,lon,lat] -- Closest middle wpnt of the safe area to the boat
 
     a = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2],actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1])
     b = headingStandalone.calc_dinstance(rmc_cmd[0], rmc_cmd[2],actuallyMiddleClosestSafeWpnt[2], actuallyMiddleClosestSafeWpnt[1])
-    if a <= b: # if condition met heading to safe area, if not assume we are in safe area and while loop takes over
+    if a < b: # if condition met heading to safe area, if not assume we are in safe area and while loop takes over
         
         h = headingStandalone.calc_heading(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1])  
         # After calculating heading, send it to the system as HSC
@@ -180,6 +182,13 @@ def rads_jebany_function(rmc_cmd):
         hsc_sentence = hsc_sentence.encode("ascii")
         print(hsc_sentence)
         send_cmd_to_system(hsc_sentence)
+
+        thd_cmd = generate_thd_hsc.generate_thd_sentence(recommended_speed)
+        thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
+        thd_cmd = thd_cmd + "\r\n"
+        thd_cmd = thd_cmd.encode("ascii")
+        print(thd_cmd)
+        send_cmd_to_system(thd_cmd)
         
     distance =  0 # used for while loop
     # repeats for every time var actuallyClosestSafeWpnt is updated and distance to it less then 5m
@@ -187,11 +196,13 @@ def rads_jebany_function(rmc_cmd):
     while i < 4: # outside safe area scenario
         distance = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1])
         if distance < 5:
-            # Stage 2: get to clothest beth safe location
+            # Stage 2: get to clothest beth safe location from given_berth_name and retrieve a full berth record from all_berth_data
+            # and assign it to chosen_berth var
             if chosen_berth == "": # runs once
-                for beth in all_berth_data: # search in all_berth_data for record with string matching given_berth_name ---- "Berth 1-1" -example
+                for berth in all_berth_data: # search in all_berth_data for record with string matching given_berth_name ---- "Berth 1-1" -example
                     if given_berth_name == berth[0]:
-                    chosen_berth = berth
+                        chosen_berth = berth
+
             actuallyClosestSafeWpnt = [0,chosen_berth[i+1], chosen_berth[i]]  # [meters, lon, lat] --- updates actuallyClosestSafeWpnt to follow on next iterration of the loop
             new_h = headingStandalone.calc_heading(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1]) # send boat to HDG towards updated actuallyClosestSafeWpnt
             
@@ -201,15 +212,20 @@ def rads_jebany_function(rmc_cmd):
             hsc_sentence = hsc_sentence.encode("ascii")
             print(hsc_sentence)
             send_cmd_to_system(hsc_sentence)     #generate_thc_sentence() ------  OR  ------------ _online_port.write(thc_cmd)   
-    
-            new_speed = recommended_speed - (i * 2)   # updates global var, speed reduction every leg of the track
+
+            if i < 4:
+                new_speed = recommended_speed - (i * 2)   # updates global var, speed reduction every leg of the track
+            elif i == 4:
+                new_speed = -2   # updates global var, speed reduction every leg of the track
 
             thd_cmd = generate_thd_hsc.generate_thd_sentence(new_speed)
             thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
             thd_cmd = thd_cmd + "\r\n"
             thd_cmd = thd_cmd.encode("ascii")
-            _online_port.write(thd_cmd)
-            #generate_thd_sentence() ------  OR  ------------ _online_port.write(thd_cmd)
+            send_cmd_to_system(thd_cmd)
+            i += 1
+            #_online_port.write(thd_cmd)
+            # generate_thd_sentence() ------  OR  ------------ _online_port.write(thd_cmd)
         
     #  distance from beth check not implemented    
     print("--------------Challenge 3 complete!-------------")
