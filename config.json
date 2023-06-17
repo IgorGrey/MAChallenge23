@@ -23,6 +23,9 @@
 
     "chal3": {
         "speed": 20,
+        "port": "COM14",
+        "target": "Berth 17-9",
+        "distance_to_swap_heading": 5,
         "param3": "param"
     },
 

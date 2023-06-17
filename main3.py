@@ -6,6 +6,8 @@ import json
 import math 
 import main1
 import ports_module
+import distanceFormula
+import headingFormula
 
 
 with open("config.json", "r") as config_file:
@@ -14,7 +16,7 @@ with open("config.json", "r") as config_file:
 
 
 def send_cmd_to_system(cmd):
-    _online_port = ports_module.connect_to_port(config["general"]["input_port"])
+    _online_port = ports_module.connect_to_port(config["chal3"]["port"])
     _online_port.write(cmd)
     res = _online_port.readline().decode()
     print(res)
@@ -82,7 +84,8 @@ safeAreaWpnts = [
  (-1.495377,	 51.0148528)
  (-1.4944199,	 51.0148934)]
 
-all_berth_data = [["Berth 1-1",(-1.4956263, 51.0146539),(-1.4958094, 51.0147379),(-1.495965, 51.0148468),(-1.4956327, 51.0149771)],
+all_berth_data = [
+["Berth 1-1",(-1.4956263, 51.0146539),(-1.4958094, 51.0147379),(-1.495965, 51.0148468),(-1.4956327, 51.0149771)],
 ["Berth 1-2",(-1.4956263, 51.0146539),(-1.4958094, 51.0147379),(-1.495965, 51.0148468),(-1.4958506, 51.0148919)],
 ["Berth 2-1",(-1.4951342, 51.0149263),(-1.4952198, 51.0149517),(-1.4952768, 51.0149838),(-1.4953036, 51.0150033)],
 ["Berth 2-2",(-1.4951342, 51.0149263),(-1.4952198, 51.0149517),(-1.4952768, 51.0149838),(-1.4954028, 51.0150952)],
@@ -145,11 +148,68 @@ all_berth_data = [["Berth 1-1",(-1.4956263, 51.0146539),(-1.4958094, 51.0147379)
 ["Berth 17-19",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939195, 51.0145955)],
 ["Berth 17-20",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939067, 51.0145849)]]
 
+
+def doms_funcion(_online_port, rmc_cmd, find_first_berth, keep_loop_alive, waypoints):
+    target = config["chal3"]["target"]
+    lat, lon = headingStandalone.extract_lat_lon(rmc_cmd)
+    min_distance, distance, first_distance = float("inf"), 0, 0
+    if find_first_berth:
+        first_lat, first_lon = 0, 0
+        find_first_berth = False
+        for i in range(len(all_berth_data)):
+            first_distance = distanceFormula.calculate_distance(lat, lon, all_berth_data[i][1][1], all_berth_data[i][1][0])
+            if first_distance < min_distance:
+                first_lat, first_lon = 0, 0
+                first_lat = all_berth_data[i][1][1]
+                first_lon = all_berth_data[i][1][0]
+                min_distance = first_distance
+
+        for ii in range(len(all_berth_data)):
+            # If berth name found
+            if target == all_berth_data[ii][0]:
+                # Append last point (berth)
+                waypoints.append(all_berth_data[ii][4][1])
+                waypoints.append(all_berth_data[ii][4][0])
+                # Append before berth
+                waypoints.append(all_berth_data[ii][3][1])
+                waypoints.append(all_berth_data[ii][3][0])
+                # Append points before that
+                waypoints.append(all_berth_data[ii][2][1])
+                waypoints.append(all_berth_data[ii][2][0])
+                # Append middle point to the berth
+                waypoints.append(all_berth_data[ii][1][1])
+                waypoints.append(all_berth_data[ii][1][0])
+                break
+        
+        waypoints.append(first_lat)
+        waypoints.append(first_lon)
+
+    # Write part where it ends the script if waypoints is empty
+    distance = distanceFormula.calculate_distance(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+    if distance < config["chal3"]["distance_to_swap_heading"]:
+        waypoints.pop()
+        waypoints.pop()
+
+    head_calc = headingFormula.calculate_heading(lat, lon, waypoints[len(waypoints)-1], waypoints[len(waypoints)-2])
+    hsc_cmd = generate_thd_hsc.generate_hsc_sentence(head_calc)
+    hsc_cmd = hsc_cmd + "*" + main1.calculate_checksum(hsc_cmd[1:])
+    hsc_cmd = hsc_cmd + "\r\n"
+    hsc_cmd = hsc_cmd.encode("ascii")
+    _online_port.write(hsc_cmd)
+
+    thd_cmd = generate_thd_hsc.generate_thd_sentence(config["chal3"]["speed"])
+    thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[:1])
+    thd_cmd = thd_cmd + "\r\n"
+    thd_cmd = thd_cmd.encode("ascii")
+    _online_port.write(thd_cmd)
+
+    return keep_loop_alive, find_first_berth, waypoints
+
+    
+
 chosen_berth = [] # [berth_name, save_wpnt, wpnt1, wpnt2, wpnt3]
 middleWpntSafeArea = [(-1.4953089, 51.0147121), (-1.4949817, 51.0148386), (-1.4947268, 51.0149517)]
-
-actuallyClosestSafeWpnt = [] 
-
+waypointToFollow = [] 
 recommended_speed = config["chal3"]["speed"] # GRAB FROM CONFIG AND ASSING TO THIS VAR, USED LATER
 #----------------------------------------------------------------------------
 
@@ -157,7 +217,7 @@ given_berth_name = "Berth 1-1" # GIVEN BY ORGANISIRES! ENTER WITH CAUTION, USE C
 
 #-----------------------------------------------------------------------------------------
 
-def rads_jebany_function(rmc_cmd):
+def rads_jebany_function(rmc_cmd, _online_port):
     closestSafeAreaWpnts = [] # [[meters, lon, lat]] 
     for safeAreaWpnt in safeAreaWpnts:
         m = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2], safeAreaWpnt[1], safeAreaWpnt[0])
@@ -174,6 +234,8 @@ def rads_jebany_function(rmc_cmd):
     b = headingStandalone.calc_dinstance(rmc_cmd[0], rmc_cmd[2],actuallyMiddleClosestSafeWpnt[2], actuallyMiddleClosestSafeWpnt[1])
     if a < b: # if condition met heading to safe area, if not assume we are in safe area and while loop takes over
         
+        waypointToFollow = actuallyClosestSafeWpnt
+
         h = headingStandalone.calc_heading(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1])  
         # After calculating heading, send it to the system as HSC
         hsc_sentence = generate_thd_hsc.generate_hsc_sentence(h)
@@ -189,19 +251,20 @@ def rads_jebany_function(rmc_cmd):
         thd_cmd = thd_cmd.encode("ascii")
         print(thd_cmd)
         send_cmd_to_system(thd_cmd)
-        
+    
     distance =  0 # used for while loop
     # repeats for every time var actuallyClosestSafeWpnt is updated and distance to it less then 5m
     i = 1 
-    while i < 4: # outside safe area scenario
+    while i < 5: # outside safe area scenario
+        # Stage 2: get to clothest beth safe location from given_berth_name and retrieve a full berth record from all_berth_data
+        # and assign it to chosen_berth var
+        if chosen_berth == "": # runs once
+            for berth in all_berth_data: # search in all_berth_data for record with string matching given_berth_name ---- "Berth 1-1" -example
+                if given_berth_name == berth[0]:
+                    chosen_berth = berth
+        
         distance = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1])
         if distance < 5:
-            # Stage 2: get to clothest beth safe location from given_berth_name and retrieve a full berth record from all_berth_data
-            # and assign it to chosen_berth var
-            if chosen_berth == "": # runs once
-                for berth in all_berth_data: # search in all_berth_data for record with string matching given_berth_name ---- "Berth 1-1" -example
-                    if given_berth_name == berth[0]:
-                        chosen_berth = berth
 
             actuallyClosestSafeWpnt = [0,chosen_berth[i+1], chosen_berth[i]]  # [meters, lon, lat] --- updates actuallyClosestSafeWpnt to follow on next iterration of the loop
             new_h = headingStandalone.calc_heading(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1]) # send boat to HDG towards updated actuallyClosestSafeWpnt
@@ -213,9 +276,10 @@ def rads_jebany_function(rmc_cmd):
             print(hsc_sentence)
             send_cmd_to_system(hsc_sentence)     #generate_thc_sentence() ------  OR  ------------ _online_port.write(thc_cmd)   
 
-            if i < 4:
+            # --------- remove 5th itteration from while loop ---------
+            if i < 5:
                 new_speed = recommended_speed - (i * 2)   # updates global var, speed reduction every leg of the track
-            elif i == 4:
+            elif i == 5:
                 new_speed = -2   # updates global var, speed reduction every leg of the track
 
             thd_cmd = generate_thd_hsc.generate_thd_sentence(new_speed)
@@ -231,34 +295,36 @@ def rads_jebany_function(rmc_cmd):
     print("--------------Challenge 3 complete!-------------")
     return False
 
-def logic_challege_3(_online_port, cmd, keep_loop_alive, logic_executed):
+def logic_challege_3(_online_port, cmd, keep_loop_alive, find_first_berth, waypoints):
     if cmd.startswith("$GPRMC"):
+        
         # rmc_cmd = [degrees, N/S, degrees, W/E, heading]
         rmc_cmd = get_location_coordinates(cmd)
-        if not logic_executed:
-            keep_loop_alive = rads_jebany_function(rmc_cmd)
-            logic_executed = True
+        # if not logic_executed:
+        # keep_loop_alive = rads_jebany_function(rmc_cmd, _online_port)
+        keep_loop_alive, find_first_berth, waypoints = doms_funcion(_online_port, rmc_cmd, find_first_berth, keep_loop_alive, waypoints)
             
 
     # to send cmd to ship
     #  keep in mind to add * <checksum> to the command
     # _online_port.write(command)
     
-    return keep_loop_alive, logic_executed
+    return keep_loop_alive, find_first_berth, waypoints
 
 
-def setup_input_console(port="COM5"):
+def setup_input_console(port=config["chal3"]["port"]):
     _online_port = ports_module.connect_to_port(port)
     print("Setting up input console")
 
     keep_loop_alive = True
-    logic_executed = False
+    find_first_berth = True
+    waypoints = []
 
     while keep_loop_alive:
         res = _online_port.readline().decode()
-        print(res)
+        # print(res)
         try:
-            keep_loop_alive, logic_executed = logic_challege_3(_online_port, res, keep_loop_alive, logic_executed)
+            keep_loop_alive, find_first_berth, waypoints = logic_challege_3(_online_port, res, keep_loop_alive, find_first_berth, waypoints)
         
         except Exception as e:
             print("Exception in logic ", e)
@@ -272,7 +338,7 @@ def start_program():
         input_console_thread = threading.Thread(target=setup_input_console)
         listening_console_thread = threading.Thread()
 
-        print("Choose mode:\n1. Input console\n2. Listening console")
+        print("Choose mode:\n1. Input console")
 
         try:
             mode_choice = int(input())
@@ -284,8 +350,8 @@ def start_program():
             input_console_thread.start()
 
         # Setup listening console from main1.py
-        elif mode_choice == 2:
-            listening_console_thread = threading.Thread(target=main1.setup_listening_console, args=(list_of_ports[1],))
+        # elif mode_choice == 2:
+            # listening_console_thread = threading.Thread(target=main1.setup_listening_console, args=(list_of_ports[1],))
 
         else:
             print(f"Option not available {mode_choice}")
@@ -296,4 +362,4 @@ def start_program():
   
 
 if __name__ == "__main__":
-    start_program(ports_module.connect_to_port("COM5"))
+    start_program()
