@@ -27,7 +27,7 @@
     },
 
     "chal4": {
-        "min_threshold": 28,
+        "threshold": 28,
         "new_plume_sequence": 3,
         "plume_explore_speed": 20
     },
