@@ -185,7 +185,7 @@ def rads_jebany_function(rmc_cmd):
     # repeats for every time var actuallyClosestSafeWpnt is updated and distance to it less then 5m
     i = 1 
     while i < 4: # outside safe area scenario
-        distance = distanceFormula.calc_distance(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1])
+        distance = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1])
         if distance < 5:
             # Stage 2: get to clothest beth safe location
             if chosen_berth == "": # runs once

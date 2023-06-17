@@ -7,7 +7,6 @@ import headingFormula
 import generate_thd_hsc
 import distanceFormula
 import headingStandalone
-import aprox_location_epicentre
 import main1
 import json
 
@@ -139,18 +138,7 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
     if is_in_plume and new_plume_sequence == 0:
         if float(sig_cmd) < config["chal4"]["threshold"]:
             print("Exit")
-            last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
 
-            if len(v_list) >= 2 and len(h_list) >= 2:
-                last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
-                max_sig_value =  max(v_list)
-                    
-                    
-                calculate_fourth_corner(last_exit_loc,1,2)
-                set_heading(approximate_epicentre)
-                check_disatnce()
-
-            #-------------------------------
             if is_in_plume and same_turn_count == 3 or is_in_plume and same_turn_count == 1:
                 same_turn_count = 4
             else:
@@ -158,8 +146,7 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
 
             is_in_plume = False
             same_turn_count, turn_dir = make_turn(same_turn_count, turn_dir, rmc_cmd[4])
-            # dublicated earlier
-            #last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
+            last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
             new_plume_sequence = 5
             # turn_dir = -1
 
@@ -197,7 +184,6 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
             h_list.append([sig_cmd, rmc_cmd[0], rmc_cmd[2]])
 
     elif not is_in_plume and len(last_exit_loc) > 0:
-
         if distanceFormula.calculate_distance(float(rmc_cmd[0]), float(rmc_cmd[2]), float(last_exit_loc[-1][0]), float(last_exit_loc[-1][1])) > 1000:
             same_turn_count += 1
             same_turn_count, turn_dir = make_turn(same_turn_count, turn_dir, rmc_cmd[4])
@@ -290,9 +276,6 @@ def start_search():
 
         print("Connecting to the server")
         while True:
-
-            pollution_level
-
             tcp_data = sock.recv(1024)
             data_decoded = tcp_data.decode('utf-8')
 
@@ -313,11 +296,6 @@ def start_search():
             else:
                 print("Caught incorrect DYSIG, GPRMC or CCFEC")
                 print(pollution_level, "\n", rmc_coords)
-            
-            # SUCCESS CONDITION
-            if pollution_level and float(pollution_level) >= 80.0:
-                print ("YAY! DONE IT!")
-                break
 
 
     def recieve_heading_data():

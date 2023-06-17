@@ -137,7 +137,7 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
             # ------------------------------ 17 JUNE CHANGE ----------------------------  last_exit_loc should be not list 
             # but normal var containing [lat, lon] - every iterration will rewrite values
             # last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
-            last_exit_loc = [[rmc_cmd[0], rmc_cmd[2]]
+            last_exit_loc = [rmc_cmd[0], rmc_cmd[2]]
 
             if len(v_list) >= 2 and len(h_list) >= 2:
                 #last_exit_loc.append([rmc_cmd[0], rmc_cmd[2]])
@@ -172,7 +172,7 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
                 thd_cmd = thd_cmd + "\r\n"
                 thd_cmd = thd_cmd.encode("ascii")
-                _online_port.write(thd_cmd)
+                send_cmd_to_system(thd_cmd)
                 #generate_thd_sentence() ------  OR  ------------ _online_port.write(thd_cmd)
 
                 # Keep tracking for sig decrease
