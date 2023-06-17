@@ -1,10 +1,8 @@
 import socket
 import threading
-import headingFormula
 import generate_thd_hsc
 import headingStandalone
 import json
-
 import math 
 import distanceFormula
 import main1
@@ -34,59 +32,190 @@ def get_location_coordinates(rmc_cmd):
     else:
         return 0
 
+# def autonomously_berth(start_latitude, start_longitude, berthing_points, heading):
+#     safety_distance = 1.0  # meters
+#     parallel_threshold = 5.0  # degrees
 
-def autonomously_berth(start_latitude, start_longitude, berthing_points, heading):
-    safety_distance = 1.0  # meters
-    parallel_threshold = 5.0  # degrees
+#     for berthing_point in berthing_points:
+#         target_latitude, target_longitude = berthing_point
+#         distance_to_target = distanceFormula.calculate_distance  (start_latitude, start_longitude, target_latitude, target_longitude)
+#         print(f"Starting Distance to Target: {distance_to_target:.2f} meters")
 
-    for berthing_point in berthing_points:
-        target_latitude, target_longitude = berthing_point
-        distance_to_target = distanceFormula.calculate_distance  (start_latitude, start_longitude, target_latitude, target_longitude)
-        print(f"Starting Distance to Target: {distance_to_target:.2f} meters")
+#         while distance_to_target > safety_distance:
+#             # Calculate the bearing from start to target
+#             dlat = math.radians(target_latitude - start_latitude)
+#             dlon = math.radians(target_longitude - start_longitude)
+#             y = math.sin(dlon) * math.cos(math.radians(target_latitude))
+#             x = math.cos(math.radians(start_latitude)) * math.sin(math.radians(target_latitude)) - \
+#                 math.sin(math.radians(start_latitude)) * math.cos(math.radians(target_latitude)) * math.cos(dlon)
+#             bearing = math.degrees(math.atan2(y, x))
+#             if bearing < 0:
+#                 bearing += 360
 
-        while distance_to_target > safety_distance:
-            # Calculate the bearing from start to target
-            dlat = math.radians(target_latitude - start_latitude)
-            dlon = math.radians(target_longitude - start_longitude)
-            y = math.sin(dlon) * math.cos(math.radians(target_latitude))
-            x = math.cos(math.radians(start_latitude)) * math.sin(math.radians(target_latitude)) - \
-                math.sin(math.radians(start_latitude)) * math.cos(math.radians(target_latitude)) * math.cos(dlon)
-            bearing = math.degrees(math.atan2(y, x))
-            if bearing < 0:
-                bearing += 360
+#             # Simulate movement towards the target
+#             movement_distance = 10.0  # meters
+#             start_latitude += (movement_distance / 1000) * math.cos(math.radians(bearing))
+#             start_longitude += (movement_distance / 1000) * math.sin(math.radians(bearing))
 
-            # Simulate movement towards the target
-            movement_distance = 10.0  # meters
-            start_latitude += (movement_distance / 1000) * math.cos(math.radians(bearing))
-            start_longitude += (movement_distance / 1000) * math.sin(math.radians(bearing))
+#             # Recalculate the distance to the target
+#             distance_to_target = distanceFormula.calculate_distance(start_latitude, start_longitude, target_latitude, target_longitude)
+#             print(f"Current Distance to Target: {distance_to_target:.2f} meters")
 
-            # Recalculate the distance to the target
-            distance_to_target = distanceFormula.calculate_distance(start_latitude, start_longitude, target_latitude, target_longitude)
-            print(f"Current Distance to Target: {distance_to_target:.2f} meters")
+#         # Check if the USV has parallelly berthed
+#         bearing_to_target = heading # HSC reading !!!!!!!!!!!!!!!!!!!
+#         if abs(bearing_to_target) < parallel_threshold or abs(bearing_to_target - 180) < parallel_threshold:
+#             print("Successful berthing! The USV is fully stopped in parallel to the berth.")
+#         else:
+#             print("Berthing failed. The USV is not parallel to the berth.")
 
-        # Check if the USV has parallelly berthed
-        bearing_to_target = heading # HSC reading !!!!!!!!!!!!!!!!!!!
-        if abs(bearing_to_target) < parallel_threshold or abs(bearing_to_target - 180) < parallel_threshold:
-            print("Successful berthing! The USV is fully stopped in parallel to the berth.")
-        else:
-            print("Berthing failed. The USV is not parallel to the berth.")
+#         # Update the start position for the next berthing point
+#         start_latitude = target_latitude
+#         start_longitude = target_longitude
 
-        # Update the start position for the next berthing point
-        start_latitude = target_latitude
-        start_longitude = target_longitude
+safeAreaWpnts = [
+ (-1.4949756,	 51.0145927)
+ (-1.4947917,	 51.0150555)
+ (-1.4952066,	 51.0148913)
+ (-1.4951342,	 51.0149263)
+ (-1.4950497,	 51.0149643)
+ (-1.4953945,	 51.0145467)
+ (-1.4956263,	 51.0146539)
+ (-1.495377,	 51.0148528)
+ (-1.4944199,	 51.0148934)]
 
+all_berth_data = [[Berth 1-1,(-1.4956263, 51.0146539),(-1.4958094, 51.0147379),(-1.495965, 51.0148468),(-1.4956327, 51.0149771)],
+["Berth 1-2",(-1.4956263, 51.0146539),(-1.4958094, 51.0147379),(-1.495965, 51.0148468),(-1.4958506, 51.0148919)],
+["Berth 2-1",(-1.4951342, 51.0149263),(-1.4952198, 51.0149517),(-1.4952768, 51.0149838),(-1.4953036, 51.0150033)],
+["Berth 2-2",(-1.4951342, 51.0149263),(-1.4952198, 51.0149517),(-1.4952768, 51.0149838),(-1.4954028, 51.0150952)],
+["Berth 3-1",(-1.4950497, 51.0149643),(-1.4951165, 51.0149884),(-1.4951896, 51.0150163),(-1.4952169, 51.015037)],
+["Berth 3-2",(-1.4950497, 51.0149643),(-1.4951165, 51.0149884),(-1.4951896, 51.0150163),(-1.4952169, 51.015037)],
+["Berth 4-1",(-1.4947917, 51.0150555),(-1.4949127, 51.0150719),(-1.4950508, 51.0150973),(-1.4951144, 51.0151223)],
+["Berth 4-2",(-1.4947917, 51.0150555),(-1.4949127, 51.0150719),(-1.4950508, 51.0150973),(-1.4952123, 51.0151657)],
+["Berth 21-1",(-1.4956263, 51.0146539),(-1.495804, 51.0146387),(-1.4962184, 51.0147028),(-1.4963143, 51.0148147)],
+["Berth 21-2",(-1.4956263, 51.0146539),(-1.495804, 51.0146387),(-1.4962184, 51.0147028),(-1.4963632, 51.0147856)],
+["Berth 21-3",(-1.4956263, 51.0146539),(-1.495804, 51.0146387),(-1.4962184, 51.0147028),(-1.4963257, 51.0147603)],
+["Berth 21-4",(-1.4953945, 51.0145467),(-1.4955573, 51.0144548),(-1.4959529, 51.0144185),(-1.4964427, 51.0146786)],
+["Berth 20-1",(-1.4953945, 51.0145467),(-1.4955573, 51.0144548),(-1.4959529, 51.0144185),(-1.4964427, 51.0146786)],
+["Berth 20-2",(-1.4953945, 51.0145467),(-1.4955573, 51.0144548),(-1.4959529, 51.0144185),(-1.4962697, 51.0145609)],
+["Berth 19-1",(-1.4953945, 51.0145467),(-1.4955573, 51.0144548),(-1.4959529, 51.0144185),(-1.4960689, 51.014447)],
+["Berth 19-2",(-1.4953945, 51.0145467),(-1.4955573, 51.0144548),(-1.4959529, 51.0144185),(-1.4962144, 51.0145212)],
+["Grass island-1",(-1.495377, 51.0148528),(-1.4954242, 51.0148783),(-1.4954718, 51.0149057),(-1.4956031, 51.0149824)],
+["Grass island-2",(-1.495377, 51.0148528),(-1.4954242, 51.0148783),(-1.4954718, 51.0149057),(-1.4956031, 51.0149824)],
+["Grass island-3",(-1.495377, 51.0148528),(-1.4954242, 51.0148783),(-1.4954718, 51.0149057),(-1.4955789, 51.0149634)],
+["Grass island-4",(-1.495377, 51.0148528),(-1.4954242, 51.0148783),(-1.4954718, 51.0149057),(-1.495538, 51.0149414)],
+["Grass island-5",(-1.495377, 51.0148528),(-1.4954242, 51.0148783),(-1.4954718, 51.0149057),(-1.4954931, 51.0149216)],
+["Grass island-6",(-1.4952066, 51.0148913),(-1.4952714, 51.0149154),(-1.4953324, 51.0149412),(-1.4954213, 51.0149199)],
+["Grass island-7",(-1.4952066, 51.0148913),(-1.4952714, 51.0149154),(-1.4953324, 51.0149412),(-1.4953945, 51.0149326)],
+["Grass island-8",(-1.4952066, 51.0148913),(-1.4952714, 51.0149154),(-1.4953324, 51.0149412),(-1.495369, 51.0149592)],
+["Grass island-9",(-1.4952066, 51.0148913),(-1.4952714, 51.0149154),(-1.4953324, 51.0149412),(-1.4953717, 51.0149807)],
+["Grass island-10",(-1.4952066, 51.0148913),(-1.4952714, 51.0149154),(-1.4953324, 51.0149412),(-1.4953717, 51.0149807)],
+["Grass island-11",(-1.4952066, 51.0148913),(-1.4952714, 51.0149154),(-1.4953324, 51.0149412),(-1.4953925, 51.015022)],
+["Grass island-12",(-1.4952066, 51.0148913),(-1.4952714, 51.0149154),(-1.4953324, 51.0149412),(-1.4954052, 51.0150402)],
+["Grass island-13",(-1.4952066, 51.0148913),(-1.4952714, 51.0149154),(-1.4953324, 51.0149412),(-1.495422, 51.0150579)],
+["Grass island-14",(-1.4952066, 51.0148913),(-1.4952714, 51.0149154),(-1.4953324, 51.0149412),(-1.495422, 51.0150579)],
+["Berth 18-1",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4951325, 51.0142335)],
+["Berth 18-2",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4950084, 51.0142664)],
+["Berth 18-3",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4949517, 51.0142822)],
+["Berth 18-1",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4951325, 51.0142335)],
+["Berth 18-2",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4950084, 51.0142664)],
+["Berth 18-3",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4949517, 51.0142822)],
+["Berth 18-4",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4950688, 51.0142454)],
+["Berth 18-5",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4950688, 51.0142454)],
+["Berth 18-6",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4950688, 51.0142454)],
+["Berth 18-7",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4950688, 51.0142454)],
+["Berth 18-8",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4950688, 51.0142454)],
+["Berth 18-9",(-1.4949756, 51.0145927),(-1.4949289, 51.0144646),(-1.4948789, 51.0143102),(-1.4950688, 51.0142454)],
+["Berth 17-1",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939926, 51.0146727)],
+["Berth 17-2",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.493896, 51.0145756)],
+["Berth 17-3",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940946, 51.0147242),(-1.4939362, 51.0145672)],
+["Berth 17-4",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940946, 51.0147242),(-1.4939503, 51.0145777)],
+["Berth 17-5",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940946, 51.0147242),(-1.4939691, 51.0145976)],
+["berth 17-6",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940946, 51.0147242),(-1.4939892, 51.0146157)],
+["Berth 17-7",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940946, 51.0147242),(-1.4940073, 51.0146326)],
+["Berth 17-8",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940946, 51.0147242),(-1.4940214, 51.014649)],
+["Berth 17-9",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940946, 51.0147242),(-1.4940341, 51.01466)],
+["Berth 17-10",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940946, 51.0147242),(-1.4940429, 51.014668)],
+["Berth 17-11",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.494004, 51.0146819)],
+["Berth 17-12",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939879, 51.0146706)],
+["Berth 17-13",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939792, 51.01466)],
+["Berth 17-14",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939691, 51.0146473)],
+["Berth 17-15",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939597, 51.0146376)],
+["Berth 17-16",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939503, 51.0146288)],
+["Berth 17-17",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939396, 51.0146174)],
+["Berth 17-18",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939302, 51.0146068)],
+["Berth 17-19",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939195, 51.0145955)],
+["Berth 17-20",(-1.4944199, 51.0148934),(-1.4943011, 51.0148106),(-1.4940577, 51.014733),(-1.4939067, 51.0145849)]]
 
-def logic_challege_3(_online_port, cmd, keep_loop_alive):
+chosen_berth = [] # [berth_name, save_wpnt, wpnt1, wpnt2, wpnt3]
+middleWpntSafeArea = [(-1.4953089, 51.0147121), (-1.4949817, 51.0148386), (-1.4947268, 51.0149517)]
+]
+#----------------------------------------------------------------------------
+
+berth_name_or_number = "Berth 1-1" # GIVEN BY ORGANISIRES! ENTER WITH CAUTION, USE CAPITAL FIRST LETTER!
+
+#-----------------------------------------------------------------------------------------
+
+rads_jebany_function(rmc_cmd):
+    closestSafeAreaWpnts = [] # [[meters, lon, lat]] 
+    for safeAreaWpnt in safeAreaWpnts:
+        m = calc_distance(rmc_cmd[0], rmc_cmd[2], safeAreaWpnt[1], safeAreaWpnt[0]) # or safeAreaWpnt[0],safeAreaWpnt[1]
+        closestSafeAreaWpnts.append(m,safeAreaWpnt[0],safeAreaWpnt[1])
+    actuallyClosestSafeWpnt = min(closestSafeAreaWpnts) # [meters,lon,lat]
+    
+    closestMiddleSafeAreaWpnts = [] # [[meters, lat, lon]]
+    for wpnt in middleWpntSafeArea:
+        w = calc_distance(rmc_cmd[0], rmc_cmd[2], wpnt[1], wpnt[0]) # or  wpnt[0], wpnt[1]
+        closestMiddleSafeAreaWpnts.append(w, wpnt[0], wpnt[1])
+    actuallyMiddleClosestSafeWpnt = min(closestMiddleSafeAreaWpnts)
+
+    a = calc_distance(rmc_cmd[0], rmc_cmd[2],actuallyClosestSafeWpnt[1], actuallyClosestSafeWpnt[0])
+    b = calc_dinstance(rmc_cmd[0], rmc_cmd[2],actuallyMiddleClosestSafeWpnt[1], actuallyMiddleClosestSafeWpnt[0])
+    if a < b:
+        
+        h = calc_heading(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt) # send HDG
+        # After calculating heading, send it to the system as HSC
+        hsc_sentence = generate_thd_hsc.generate_hsc_sentence(current_heading)
+        hsc_sentence = hsc_sentence + "*" + main1.calculate_checksum(hsc_sentence[1:])
+        hsc_sentence = hsc_sentence + "\r\n"
+        hsc_sentence = hsc_sentence.encode("ascii")
+        print(hsc_sentence)
+        send_cmd_to_system(hsc_sentence)
+        
+        distance = int
+    
+        # repeats for every time var actuallyClosestSafeWpnt is updated and distance to it less then 5m
+        i = 1 
+        while i < 4:
+            distance = calc_distance(currentLoc, actuallyClosestSafeWpnt)
+            if distance < 5:
+                # Stage 2: get to clothest beth safe location
+                if chosen_berth == "":
+                    for berth in all_berth_data:
+                        # search in all_berth_data[0] for string "berth 1-1"
+                        berth = chosen_berth
+                actuallyClosestSafeWpnt = chosen_berth[i] # [lat, lon]
+                h = calc_heading(currentLoc, actuallyClosestSafeWpnt) # send boat to HDG towards updated actuallyClosestSafeWpnt
+                # send_speed(-(i * 3))
+                +i
+    
+    # final heading and distance from beth checks?    
+    print("--------------Challenge 3 complete!-------------")
+    return keep_loop_alive = False
+
+def logic_challege_3(_online_port, cmd, keep_loop_alive, logic_executed):
     if cmd.startswith("$GPRMC"):
         # rmc_cmd = [degrees, N/S, degrees, W/E, heading]
         rmc_cmd = get_location_coordinates(cmd)
+        if not logic_executed:
+            keep_loop_alive = rads_jebany_function(rmc_cmd)
+            logic_executed = True
+            
 
     # to send cmd to ship
     #  keep in mind to add * <checksum> to the command
     # _online_port.write(command)
-        
     
-    return keep_loop_alive
+    return keep_loop_alive, logic_executed
 
 
 def setup_input_console(port="COM5"):
@@ -94,12 +223,13 @@ def setup_input_console(port="COM5"):
     print("Setting up input console")
 
     keep_loop_alive = True
+    logic_executed = False
 
     while keep_loop_alive:
         res = _online_port.readline().decode()
         print(res)
         try:
-            keep_loop_alive = logic_challege_3(_online_port, res, keep_loop_alive)
+            keep_loop_alive, logic_executed = logic_challege_3(_online_port, res, keep_loop_alive, logic_executed)
         
         except Exception as e:
             print("Exception in logic ", e)
@@ -134,91 +264,7 @@ def start_program():
 
     except OSError as oe:
         print("There is a problem with configuring the port", oe)
+  
 
-
-    # loop_keep_alive = True
-
-    # while loop_keep_alive:
-    #     res = _online_port.readline().decode()
-    #     if res and res.startswith("$"+"GPRMC"):
-    #     # list of 4 arguments i need only 0 and 2 lat and lon
-    #         current_location = main4_old.get_location_coordinates(res)
-    #         # Specify the start point coordinates # GET REAL DATA FROM RMC sentences 
-    #         start_latitude = float(current_location[0])
-    #         start_longitude = float(current_location[2])
-    #         heading = main4_old.get_heading_degrees(res)
-
-    #         autonomously_berth(start_latitude, start_longitude, berthing_points, heading)
-    
-
-
-
-# Specify the berthing points as a list of tuples (latitude, longitude)
-berthing_points = [
-    
-(-1.49563959,	51.01500392),
-(-1.49587255,	51.01491172),
-(-1.49531816,	51.01499806),
-(-1.49542321,	51.01508828),
-(-1.49523361,	51.01502972),
-(-1.49523365,	51.01502975),
-(-1.49512412,	51.01511353),
-(-1.49522565,	51.01515629),
-(-1.49631525,	51.01482022),
-(-1.4963771,    51.01478376),
-(-1.49633863,	51.01475266),
-(-1.49645447,	51.01467527),
-(-1.49645579,	51.01467632),
-(-1.49628293,	51.01455707),
-(-1.49608418,	51.01444152),
-(-1.49622863,	51.01451692),
-(-1.49558683,	51.01506076),
-(-1.49555635,	51.01501464),
-(-1.49552099,	51.01498482),
-(-1.49548965,	51.01496168),
-(-1.49546532,	51.01494964),
-(-1.49543341,	51.01494439),
-(-1.49541201,	51.01495155),
-(-1.49539038,	51.014962),
-(-1.49539189,	51.01497994),
-(-1.49539464,	51.01499952),
-(-1.49540872,	51.01502126),
-(-1.49541658,	51.01503946),
-(-1.49543392,	51.01505525),
-(-1.49547898,	51.01509668),
-(-1.49512372,	51.0142176),
-(-1.49495033,	51.014267),
-(-1.49495557,	51.01427317),
-(-1.49498072,	51.01426694),
-(-1.49500674,	51.01425966),
-(-1.49503336,	51.01425163),
-(-1.49506038,	51.01424457),
-(-1.49506204,	51.01424418),
-(-1.49506204,	51.01424418),
-(-1.49506204,	51.01424418),
-(-1.49506204,	51.01424418),
-(-1.49506204,	51.01424418),
-(-1.49400791,	51.01466578),
-(-1.49391204,	51.0145692),
-(-1.49391904,	51.01456555),
-(-1.4939344,    51.01457934),
-(-1.49395344,	51.01459873),
-(-1.49397199,	51.01461722),
-(-1.49398971,	51.01463458),
-(-1.49400751,	51.01464975),
-(-1.49402074,	51.01466293),
-(-1.49402932,	51.01467101),
-(-1.49401737,	51.01467696),
-(-1.49400363,	51.01466426),
-(-1.49399335,	51.01465369),
-(-1.49398332,	51.01464308),
-(-1.49397399,	51.01463419),
-(-1.49396417,	51.0146237),
-(-1.49395317,	51.01461282),
-(-1.4939444,   51.01460173),
-(-1.49393429,	51.01459017),
-(-1.49392301,	51.01457981),
-]
-    # Add more berthing points as needed
 if __name__ == "__main__":
     start_program(ports_module.connect_to_port("COM5"))
