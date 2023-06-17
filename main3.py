@@ -9,12 +9,18 @@ import math
 import distanceFormula
 import main1
 import ports_module
-import main4_old
 
 
 with open("config.json", "r") as config_file:
     config = config_file.read()
     config = json.loads(config)
+
+
+def send_cmd_to_system(cmd):
+    _online_port = ports_module.connect_to_port(config["general"]["input_port"])
+    _online_port.write(cmd)
+    res = _online_port.readline().decode()
+    print(res)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
