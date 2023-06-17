@@ -67,7 +67,7 @@ def get_location_coordinates(rmc_cmd):
 #         else:
 #             print("Berthing failed. The USV is not parallel to the berth.")
 
-#         # Update the start position for the next berthing point
+#         Update the start position for the next berthing point
 #         start_latitude = target_latitude
 #         start_longitude = target_longitude
 
@@ -147,6 +147,8 @@ all_berth_data = [["Berth 1-1",(-1.4956263, 51.0146539),(-1.4958094, 51.0147379)
 
 chosen_berth = [] # [berth_name, save_wpnt, wpnt1, wpnt2, wpnt3]
 middleWpntSafeArea = [(-1.4953089, 51.0147121), (-1.4949817, 51.0148386), (-1.4947268, 51.0149517)]
+actuallyClosestSafeWpnt = []
+recommended_speed = config["chal3"]["l0_speed"] # GRAB FROM CONFIG AND ASSING TO THIS VAR, USED LATER
 #----------------------------------------------------------------------------
 
 given_berth_name = "Berth 1-1" # GIVEN BY ORGANISIRES! ENTER WITH CAUTION, USE CAPITAL FIRST LETTER!
@@ -198,11 +200,18 @@ def rads_jebany_function(rmc_cmd):
             hsc_sentence = hsc_sentence + "\r\n"
             hsc_sentence = hsc_sentence.encode("ascii")
             print(hsc_sentence)
-            send_cmd_to_system(hsc_sentence)        
+            send_cmd_to_system(hsc_sentence)     #generate_thc_sentence() ------  OR  ------------ _online_port.write(thc_cmd)   
     
-            # send_speed(-(i * 3))
-    
-    # final heading and distance from beth checks?    
+            new_speed = recommended_speed - (i * 2)   # updates global var, speed reduction every leg of the track
+
+            thd_cmd = generate_thd_hsc.generate_thd_sentence(new_speed)
+            thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
+            thd_cmd = thd_cmd + "\r\n"
+            thd_cmd = thd_cmd.encode("ascii")
+            _online_port.write(thd_cmd)
+            #generate_thd_sentence() ------  OR  ------------ _online_port.write(thd_cmd)
+        
+    #  distance from beth check not implemented    
     print("--------------Challenge 3 complete!-------------")
     return False
 
