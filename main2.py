@@ -179,24 +179,10 @@ def handle_both_challenges(_online_port):
                     set_start_speed = False
                 loop_keep_alive, recovery_sequence = main1.handle_found_sentence(_online_port, 0, rmc_msg, waypoints, past_waypoints, loop_keep_alive, recovery_sequence)
 
-        log_module.write_to_log_chal2_testing_ttm(ttm_decoded, "./chal2_ttm_test.log")
-
-        # main 1
-#  open=True>(port='COM5', baudrate=111520, bytesize=8, parity='N', stopbits=1, timeout=None, xonxoff=False, rtscts=False, dsrdtr=False) 0 $GPRMC,000022.48,A,5050.700364,N,00044.801892,W,2.6,276.0,230418,4.0,W,A,S*45
-#  [-0.746166, 50.84491, -0.745483, 50.844937, -0.745642, 50.845278, -0.745747, 50.845475, -0.745927, 50.845006, -0.745935, 50.845496, -0.746619, 50.845498] [-0.746623, 50.845] True True
-
-        # main 2
-# open=True>(port='COM5', baudrate=111520, bytesize=8, parity='N', stopbits=1, timeout=None, xonxoff=False, rtscts=False, dsrdtr=False) 0 $GPRMC,000050.67,A,5050.724929,N,00044.798176,W,1.9,8.2,230418,4.0,W,A,S*41
-#  [-0.746166, 50.84491, -0.745483, 50.844937, -0.745642, 50.845278, -0.745747, 50.845475, -0.745927, 50.845006, -0.745935, 50.845496, -0.746619, 50.845498, -0.746623, 50.845] [] True False
-
-    # TTM_port = TCP server connect to get TTM commands
-    
-    # 1. If TTM received and it doesnt see any obstacles in the X range, proceed to continue with challenge 1
-    # 2. 
-    # main1.handle_responses(_online_port)
+        # log_module.write_to_log_chal2_testing_ttm(ttm_decoded, "./chal2_ttm_test.log")
 
 
-def setup_input_console(port="COM5"):
+def setup_input_console(port=config["general"]["input_port"]):
     _online_port = ports_module.connect_to_port(port)
     print("Setting up input console")
 

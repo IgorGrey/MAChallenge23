@@ -4,7 +4,6 @@ import generate_thd_hsc
 import headingStandalone
 import json
 import math 
-import distanceFormula
 import main1
 import ports_module
 
@@ -148,33 +147,32 @@ all_berth_data = [[Berth 1-1,(-1.4956263, 51.0146539),(-1.4958094, 51.0147379),(
 
 chosen_berth = [] # [berth_name, save_wpnt, wpnt1, wpnt2, wpnt3]
 middleWpntSafeArea = [(-1.4953089, 51.0147121), (-1.4949817, 51.0148386), (-1.4947268, 51.0149517)]
-]
 #----------------------------------------------------------------------------
 
 berth_name_or_number = "Berth 1-1" # GIVEN BY ORGANISIRES! ENTER WITH CAUTION, USE CAPITAL FIRST LETTER!
 
 #-----------------------------------------------------------------------------------------
 
-rads_jebany_function(rmc_cmd):
+def rads_jebany_function(rmc_cmd):
     closestSafeAreaWpnts = [] # [[meters, lon, lat]] 
     for safeAreaWpnt in safeAreaWpnts:
-        m = calc_distance(rmc_cmd[0], rmc_cmd[2], safeAreaWpnt[1], safeAreaWpnt[0]) # or safeAreaWpnt[0],safeAreaWpnt[1]
+        m = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2], safeAreaWpnt[1], safeAreaWpnt[0]) # or safeAreaWpnt[0],safeAreaWpnt[1]
         closestSafeAreaWpnts.append(m,safeAreaWpnt[0],safeAreaWpnt[1])
     actuallyClosestSafeWpnt = min(closestSafeAreaWpnts) # [meters,lon,lat]
     
     closestMiddleSafeAreaWpnts = [] # [[meters, lat, lon]]
     for wpnt in middleWpntSafeArea:
-        w = calc_distance(rmc_cmd[0], rmc_cmd[2], wpnt[1], wpnt[0]) # or  wpnt[0], wpnt[1]
+        w = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2], wpnt[1], wpnt[0]) # or  wpnt[0], wpnt[1]
         closestMiddleSafeAreaWpnts.append(w, wpnt[0], wpnt[1])
     actuallyMiddleClosestSafeWpnt = min(closestMiddleSafeAreaWpnts)
 
-    a = calc_distance(rmc_cmd[0], rmc_cmd[2],actuallyClosestSafeWpnt[1], actuallyClosestSafeWpnt[0])
-    b = calc_dinstance(rmc_cmd[0], rmc_cmd[2],actuallyMiddleClosestSafeWpnt[1], actuallyMiddleClosestSafeWpnt[0])
+    a = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2],actuallyClosestSafeWpnt[1], actuallyClosestSafeWpnt[0])
+    b = headingStandalone.calc_dinstance(rmc_cmd[0], rmc_cmd[2],actuallyMiddleClosestSafeWpnt[1], actuallyMiddleClosestSafeWpnt[0])
     if a < b:
         
-        h = calc_heading(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt) # send HDG
+        h = headingStandalone.calc_heading(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt) # send HDG
         # After calculating heading, send it to the system as HSC
-        hsc_sentence = generate_thd_hsc.generate_hsc_sentence(current_heading)
+        hsc_sentence = generate_thd_hsc.generate_hsc_sentence(h)
         hsc_sentence = hsc_sentence + "*" + main1.calculate_checksum(hsc_sentence[1:])
         hsc_sentence = hsc_sentence + "\r\n"
         hsc_sentence = hsc_sentence.encode("ascii")
@@ -186,7 +184,7 @@ rads_jebany_function(rmc_cmd):
         # repeats for every time var actuallyClosestSafeWpnt is updated and distance to it less then 5m
         i = 1 
         while i < 4:
-            distance = calc_distance(currentLoc, actuallyClosestSafeWpnt)
+            distance = headingStandalone.calc_distance(currentLoc, actuallyClosestSafeWpnt)
             if distance < 5:
                 # Stage 2: get to clothest beth safe location
                 if chosen_berth == "":
@@ -194,13 +192,13 @@ rads_jebany_function(rmc_cmd):
                         # search in all_berth_data[0] for string "berth 1-1"
                         berth = chosen_berth
                 actuallyClosestSafeWpnt = chosen_berth[i] # [lat, lon]
-                h = calc_heading(currentLoc, actuallyClosestSafeWpnt) # send boat to HDG towards updated actuallyClosestSafeWpnt
+                h = headingStandalone.calc_heading(currentLoc, actuallyClosestSafeWpnt) # send boat to HDG towards updated actuallyClosestSafeWpnt
                 # send_speed(-(i * 3))
                 +i
     
     # final heading and distance from beth checks?    
     print("--------------Challenge 3 complete!-------------")
-    return keep_loop_alive = False
+    return False
 
 def logic_challege_3(_online_port, cmd, keep_loop_alive, logic_executed):
     if cmd.startswith("$GPRMC"):

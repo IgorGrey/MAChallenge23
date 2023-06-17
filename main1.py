@@ -283,8 +283,8 @@ def handle_responses(_online_port):
             elif res.startswith("$" + "GPRMC"):
                 loop_keep_alive, recovery_sequence = handle_found_sentence(_online_port, 0, res, waypoints, past_waypoints, loop_keep_alive, recovery_sequence)
 
-def setup_input_console(port="COM5"):
-    _online_port = ports_module.connect_to_port("COM5")
+def setup_input_console(port=config["general"]["input_port"]):
+    _online_port = ports_module.connect_to_port(config["general"]["input_port"])
     print("Setting up input console")
 
     try:
@@ -311,7 +311,7 @@ def setup_input_console(port="COM5"):
             print("Error has occured")
             continue
         
-def setup_listening_console(port="COM6", baudrate=115200):
+def setup_listening_console(port=config["general"]["listen_port"], baudrate=115200):
     _online_port = ports_module.connect_to_port(port)
     while True:
         response = _online_port.readline().decode()

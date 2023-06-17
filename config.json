@@ -35,7 +35,10 @@
     "chal5": {
         "param4": "param"
     },
+
     "general": {
+        "input_port": "COM5",
+        "listen_port": "COM6", 
         "server_addr": "127.0.0.1",
         "server_tcp_port": 49699,
         "opencpn_udp_port": 2947
