@@ -82,7 +82,7 @@ safeAreaWpnts = [
  (-1.495377,	 51.0148528)
  (-1.4944199,	 51.0148934)]
 
-all_berth_data = [[Berth 1-1,(-1.4956263, 51.0146539),(-1.4958094, 51.0147379),(-1.495965, 51.0148468),(-1.4956327, 51.0149771)],
+all_berth_data = [["Berth 1-1",(-1.4956263, 51.0146539),(-1.4958094, 51.0147379),(-1.495965, 51.0148468),(-1.4956327, 51.0149771)],
 ["Berth 1-2",(-1.4956263, 51.0146539),(-1.4958094, 51.0147379),(-1.495965, 51.0148468),(-1.4958506, 51.0148919)],
 ["Berth 2-1",(-1.4951342, 51.0149263),(-1.4952198, 51.0149517),(-1.4952768, 51.0149838),(-1.4953036, 51.0150033)],
 ["Berth 2-2",(-1.4951342, 51.0149263),(-1.4952198, 51.0149517),(-1.4952768, 51.0149838),(-1.4954028, 51.0150952)],
@@ -149,7 +149,7 @@ chosen_berth = [] # [berth_name, save_wpnt, wpnt1, wpnt2, wpnt3]
 middleWpntSafeArea = [(-1.4953089, 51.0147121), (-1.4949817, 51.0148386), (-1.4947268, 51.0149517)]
 #----------------------------------------------------------------------------
 
-berth_name_or_number = "Berth 1-1" # GIVEN BY ORGANISIRES! ENTER WITH CAUTION, USE CAPITAL FIRST LETTER!
+given_berth_name = "Berth 1-1" # GIVEN BY ORGANISIRES! ENTER WITH CAUTION, USE CAPITAL FIRST LETTER!
 
 #-----------------------------------------------------------------------------------------
 
@@ -166,11 +166,11 @@ def rads_jebany_function(rmc_cmd):
         closestMiddleSafeAreaWpnts.append(w, wpnt[0], wpnt[1])
     actuallyMiddleClosestSafeWpnt = min(closestMiddleSafeAreaWpnts)
 
-    a = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2],actuallyClosestSafeWpnt[1], actuallyClosestSafeWpnt[0])
-    b = headingStandalone.calc_dinstance(rmc_cmd[0], rmc_cmd[2],actuallyMiddleClosestSafeWpnt[1], actuallyMiddleClosestSafeWpnt[0])
-    if a < b:
+    a = headingStandalone.calc_distance(rmc_cmd[0], rmc_cmd[2],actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1])
+    b = headingStandalone.calc_dinstance(rmc_cmd[0], rmc_cmd[2],actuallyMiddleClosestSafeWpnt[2], actuallyMiddleClosestSafeWpnt[1])
+    if a <= b: # if condition met heading to safe area, if not assume we are in safe area and while loop takes over
         
-        h = headingStandalone.calc_heading(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt) # send HDG
+        h = headingStandalone.calc_heading(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1])  
         # After calculating heading, send it to the system as HSC
         hsc_sentence = generate_thd_hsc.generate_hsc_sentence(h)
         hsc_sentence = hsc_sentence + "*" + main1.calculate_checksum(hsc_sentence[1:])
@@ -179,22 +179,28 @@ def rads_jebany_function(rmc_cmd):
         print(hsc_sentence)
         send_cmd_to_system(hsc_sentence)
         
-        distance = int
+    distance =  0 # used for while loop
+    # repeats for every time var actuallyClosestSafeWpnt is updated and distance to it less then 5m
+    i = 1 
+    while i < 4: # outside safe area scenario
+        distance = distanceFormula.calc_distance(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1])
+        if distance < 5:
+            # Stage 2: get to clothest beth safe location
+            if chosen_berth == "": # runs once
+                for beth in all_berth_data: # search in all_berth_data for record with string matching given_berth_name ---- "Berth 1-1" -example
+                    if given_berth_name == berth[0]:
+                    chosen_berth = berth
+            actuallyClosestSafeWpnt = [0,chosen_berth[i+1], chosen_berth[i]]  # [meters, lon, lat] --- updates actuallyClosestSafeWpnt to follow on next iterration of the loop
+            new_h = headingStandalone.calc_heading(rmc_cmd[0], rmc_cmd[2], actuallyClosestSafeWpnt[2], actuallyClosestSafeWpnt[1]) # send boat to HDG towards updated actuallyClosestSafeWpnt
+            
+            hsc_sentence = generate_thd_hsc.generate_hsc_sentence(new_h)
+            hsc_sentence = hsc_sentence + "*" + main1.calculate_checksum(hsc_sentence[1:])
+            hsc_sentence = hsc_sentence + "\r\n"
+            hsc_sentence = hsc_sentence.encode("ascii")
+            print(hsc_sentence)
+            send_cmd_to_system(hsc_sentence)        
     
-        # repeats for every time var actuallyClosestSafeWpnt is updated and distance to it less then 5m
-        i = 1 
-        while i < 4:
-            distance = headingStandalone.calc_distance(currentLoc, actuallyClosestSafeWpnt)
-            if distance < 5:
-                # Stage 2: get to clothest beth safe location
-                if chosen_berth == "":
-                    for berth in all_berth_data:
-                        # search in all_berth_data[0] for string "berth 1-1"
-                        berth = chosen_berth
-                actuallyClosestSafeWpnt = chosen_berth[i] # [lat, lon]
-                h = headingStandalone.calc_heading(currentLoc, actuallyClosestSafeWpnt) # send boat to HDG towards updated actuallyClosestSafeWpnt
-                # send_speed(-(i * 3))
-                +i
+            # send_speed(-(i * 3))
     
     # final heading and distance from beth checks?    
     print("--------------Challenge 3 complete!-------------")
