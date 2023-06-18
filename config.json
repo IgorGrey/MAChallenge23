@@ -42,8 +42,7 @@
     "general": {
         "input_port": "COM5",
         "listen_port": "COM6", 
-        "server_addr": "127.0.0.1",
-        "server_tcp_port": 49699,
+        "server_addr": "192.168.40.101",
+        "server_tcp_port": 5300,
         "opencpn_udp_port": 2947
-    }
-}
+}}
