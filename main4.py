@@ -147,10 +147,12 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
 
                 #run forth corner func and save to variable
                 # takes 6 parameters, 3 gps locs
-                epiceter_aprox_location_calc = ChalFOURfunctions.calculate_fourth_corner(max_sig_value_v_list_record[1],max_sig_value_v_list_record[2],max_sig_value_h_list_record[1],max_sig_value_h_list_record[2],last_exit_loc[0],last_exit_loc[1])
+                # one before last locs from last_exited_plume, both gps locs of max read in sig in v and h directions list
+                epiceter_aprox_location_calc = ChalFOURfunctions.calculate_fourth_corner(max_sig_value_v_list_record[1],max_sig_value_v_list_record[2],max_sig_value_h_list_record[1],max_sig_value_h_list_record[2],last_exit_loc[:2][0],last_exit_loc[:2][1])
                 print("CALCULATION RESULTS:", epiceter_aprox_location_calc)
                 
                 # Set heading towards new location found to specter CHECK GPS FORMATS PASSED IN DDM??
+                # last location exited plume, current loc
                 aprox_epiceter_heading = headingStandalone.calculate_heading(last_exit_loc[0],last_exit_loc[1],epiceter_aprox_location_calc[0],epiceter_aprox_location_calc[1])
                 print("HEADING TOWARDS PREDICTED EPICENTER", aprox_epiceter_heading)
                  
@@ -178,23 +180,24 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
 
                 if sig_cmd >= max_threshold : # sig is 85 or more
                     print("@REACHED EPICENTER@---90")
-                elif:
+                elif sig_cmd < max_threshold:
                     while sig_cmd<(new_min_theshold - 5):
                         # Keep track for success condition
                         if sig_cmd >= max_threshold : # sig is 85 or more
                             break
                         else:
                             # Keep tracking for sig decrease
-                            e_list.append(sig, rmc, rmc) # add index rmc
+                            e_list.append(sig_cmd, rmc[0], rmc[2])
                             new_min_theshold = max(e_list)
                 else:
                     # Empty the lists as prep for next itteration of algo()
                     v_list = []
                     h_list = []
                     e_list = []
+                    last_exit_loc = []
                     make_turn() # parameter?
                     min_threshold = new_min_theshold 
-                    algo_iteration +
+                    algo_iteration += 1 
                     algo_challenge4() ### call agin to repeat whole sequence, with diffirence of updated global var min_threshold --- need parameters?
             
             #-------------------------------
