@@ -125,10 +125,10 @@ speed = config["chal4"]["plume_explore_speed"] # plume_explore_speed #  CHECK DO
 v_list = []
 h_list = []
 e_list = []
-algo_iteration = 0
+algo_iteration = 1 # NUMBER 1 NOT INDEX 1
 
 def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
-                    v_list, h_list, same_turn_count, turn_dir, last_exit_loc):
+                    v_list, h_list, list_e, min_threshold, max_threshold, same_turn_count, turn_dir, last_exit_loc):
     # Left plume sequence
     if is_in_plume and new_plume_sequence == 0:
         if float(sig_cmd) < min_threshold:
@@ -148,8 +148,9 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 #run forth corner func and save to variable
                 # takes 6 parameters, 3 gps locs
                 # one before last locs from last_exited_plume, both gps locs of max read in sig in v and h directions list
+                # -------------_TRIPPLE CHECK THIS FUNC------_AND PRINT OUT RESULT ERIFY--------------------
                 epiceter_aprox_location_calc = ChalFOURfunctions.calculate_fourth_corner(max_sig_value_v_list_record[1],max_sig_value_v_list_record[2],max_sig_value_h_list_record[1],max_sig_value_h_list_record[2],last_exit_loc[:2][0],last_exit_loc[:2][1])
-                print("CALCULATION RESULTS:", epiceter_aprox_location_calc)
+                print("CALCULATION RESULTS:-----------------_>>>>>>>>>>>>>", epiceter_aprox_location_calc)
                 
                 # Set heading towards new location found to specter CHECK GPS FORMATS PASSED IN DDM??
                 # last location exited plume, current loc
@@ -165,7 +166,7 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 send_cmd_to_system(hsc_sentence)
 
                 # reduce speed every itteration or algo, global speed has to update at the end
-                new_speed = speed / (algo_iteration * 1)   # updates global var, speed reduction every iterration or aglo() func
+                new_speed = speed / (algo_iteration) # updates global var, speed reduction every iterration or aglo() func
     
                 thd_cmd = generate_thd_hsc.generate_thd_sentence(new_speed)
                 thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
@@ -174,33 +175,44 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 print(thd_cmd)
                 send_cmd_to_system(thd_cmd)
                 #generate_thd_sentence() ------  OR  ------------ _online_port.write(thd_cmd)
+                
+                # HAS TO TO BE WHILE LOOP
+                    #READ IN SIG
+                    # APPEND SIG TO list_e
+                    # work out max in list_e
+                    # set min_sig to max of list_e
+                    # keep track of sig decrease (max(list_e) - 15)
+                        # when sig decreaces 
+                while sig_cmd < max_threshold and sig_cmd > min_threshold: # sig is 85 or more
+                    e_list.append(sig_cmd, rmc_cmd[0], rmc_cmd[2])
+                    min_threshold = max(e_list)
+                
+                    if sig_cmd >= max_threshold : # sig is 90 or more
+                        print("@REACHED EPICENTER@---90")
+                        # STOP BOAT
+                        thd_cmd = generate_thd_hsc.generate_thd_sentence(-2)
+                        thd_cmd = thd_cmd + "*" + main1.calculate_checksum(thd_cmd[1:])
+                        thd_cmd = thd_cmd + "\r\n"
+                        thd_cmd = thd_cmd.encode("ascii")
+                        print(thd_cmd)
+                        send_cmd_to_system(thd_cmd)
+                        break
+                    # Keep tracking for sig decrease
+                    elif sig_cmd < (min_threshold-15):
+                        print("MISSED !!!!!! NEW INTERRATION")
+                        # Empty the lists as prep for next itteration of algo()
+                        v_list = []
+                        h_list = []
+                        e_list = []
+                        last_exit_loc = []
+                        make_turn(same_turn_count, turn_dir)
+                        algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
+                                        v_list, h_list, list_e, min_threshold, max_threshold, 
+                                        same_turn_count, turn_dir, last_exit_loc) ### call agin to repeat whole sequence, with diffirence of updated global var min_threshold --- need parameters?
+                        algo_iteration += 1 
 
-                # Keep tracking for sig decrease
-                new_min_theshold = 85 # temp, will change after first few records in list_e, allows while loop to run
-
-                if sig_cmd >= max_threshold : # sig is 85 or more
-                    print("@REACHED EPICENTER@---90")
-                elif sig_cmd < max_threshold:
-                    while sig_cmd<(new_min_theshold - 5):
-                        # Keep track for success condition
-                        if sig_cmd >= max_threshold : # sig is 85 or more
-                            break
-                        else:
-                            # Keep tracking for sig decrease
-                            e_list.append(sig_cmd, rmc[0], rmc[2])
-                            new_min_theshold = max(e_list)
-                else:
-                    # Empty the lists as prep for next itteration of algo()
-                    v_list = []
-                    h_list = []
-                    e_list = []
-                    last_exit_loc = []
-                    make_turn() # parameter?
-                    min_threshold = new_min_theshold 
-                    algo_iteration += 1 
-                    algo_challenge4() ### call agin to repeat whole sequence, with diffirence of updated global var min_threshold --- need parameters?
-            
             #-------------------------------
+
             if is_in_plume and same_turn_count == 3 or is_in_plume and same_turn_count == 1:
                 same_turn_count = 4
             else:
@@ -258,10 +270,11 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
         if last_exit_loc:
             print(distanceFormula.calculate_distance(float(rmc_cmd[0]), float(rmc_cmd[2]), float(last_exit_loc[-1][0]), float(last_exit_loc[-1][1])))
     
-    return is_in_plume, new_plume_sequence, same_turn_count, turn_dir, last_exit_loc
+    return is_in_plume, new_plume_sequence, same_turn_count, turn_dir, last_exit_loc, list_e, min_threshold, max_threshold
 
 
 flags_list = ["$DYSIG", "$GPRMC", "$CCFEC"]
+
 
 def start_search():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -334,7 +347,7 @@ def start_search():
         rmc_coords = ""
         heading_dir = 0
         new_plume_sequence = 0
-        same_turn_count, turn_dir = 0, -1
+        same_turn_count, turn_dir = 0, 1
         last_exit_loc = []
 
         print("Connecting to the server")
