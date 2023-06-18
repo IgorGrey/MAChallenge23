@@ -148,7 +148,7 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                 #run forth corner func and save to variable
                 # takes 6 parameters, 3 gps locs
                 # one before last locs from last_exited_plume, both gps locs of max read in sig in v and h directions list
-                # -------------_TRIPPLE CHECK THIS FUNC------_AND PRINT OUT RESULT ERIFY--------------------
+                # -------------_TRIPPLE CHECK THIS FUNC------_AND PRINT OUT RESULT  VERIFY--------------------
                 epiceter_aprox_location_calc = ChalFOURfunctions.calculate_fourth_corner(max_sig_value_v_list_record[1],max_sig_value_v_list_record[2],max_sig_value_h_list_record[1],max_sig_value_h_list_record[2],last_exit_loc[:2][0],last_exit_loc[:2][1])
                 print("CALCULATION RESULTS:-----------------_>>>>>>>>>>>>>", epiceter_aprox_location_calc)
                 
@@ -206,12 +206,10 @@ def algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                         e_list = []
                         last_exit_loc = []
                         make_turn(same_turn_count, turn_dir)
+                        algo_iteration += 1 
                         algo_challenge4(sig_cmd, rmc_cmd, is_in_plume, new_plume_sequence,
                                         v_list, h_list, list_e, min_threshold, max_threshold, 
-                                        same_turn_count, turn_dir, last_exit_loc) ### call agin to repeat whole sequence, with diffirence of updated global var min_threshold --- need parameters?
-                        algo_iteration += 1 
-
-            #-------------------------------
+                                        same_turn_count, turn_dir, last_exit_loc) 
 
             if is_in_plume and same_turn_count == 3 or is_in_plume and same_turn_count == 1:
                 same_turn_count = 4
@@ -299,118 +297,77 @@ def start_search():
     print(fwd_sentence)
     send_cmd_to_system(fwd_sentence)
 
-    # previous_cmd = ""
-    # heading_dir = ""
-    # rmc_coords = ""
-    # is_in_plume = False
-    # new_plume_sequence = 0
+def recieve_SIG_RMC_data():
+    global  v_list, h_list
+    pollution_level = ""
+    is_in_plume = False
+    rmc_coords = ""
+    heading_dir = 0
+    new_plume_sequence = 0
+    same_turn_count, turn_dir = 0, -1
+    last_exit_loc = []
 
-    # while True:
-    #     # TODO: check if the logs update every second, possibly computer lagging?
-    #     # If we need to use multithreading, check ChatGPT solution, should work for this project
-    #     # reset_heading()
-    #     # Receive data from the server with buffer size
-    #     print("Connecting to TCP server")
-    #     tcp_data = sock.recv(1024)
-    #     data_decoded = tcp_data.decode('utf-8')
-    #     print("Connected to the server")
-    #     def first_solution():
-    #         if data_decoded.startswith("$DYSIG"):
-    #             pollution_level = get_pollution_level_from_DYSIG(data_decoded)
-    #             rmc_coords = get_location_coordinates(previous_cmd)
+    print("Connecting to the server")
+    while True:
 
-    #             # Prevent incorrect DYSIG or GPRMC commands to get through
-    #             if pollution_level and rmc_coords:
-    #                 is_in_plume, plume_iter, new_plume_sequence = algo_challenge4(pollution_level, rmc_coords, is_in_plume, plume_iter, new_plume_sequence)
-    #                 write_to_log(pollution_level, rmc_coords, heading_dir)
+        pollution_level
 
-    #             else:
-    #                 print("Caught incorrect DYSIG, GPRMC or CCFEC")
-    #                 print(pollution_level, "\n", rmc_coords)
+        tcp_data = sock.recv(1024)
+        data_decoded = tcp_data.decode('utf-8')
 
-    #         # elif data_decoded.startswith("$GCHDM"):
-    #         #     heading_dir = get_heading_degrees(data_decoded)
+        # reset_heading()
+        flag = data_decoded.split(",")[0]
 
-    #         # elif data_decoded.startswith("$GPRMC"):
-    #         #     rmc_coords = get_location_coordinates(data_decoded)
-
-    #         else:
-    #             time = datetime.now()
-    #             timestamp = time.strftime("%H:%M:%S")
-    #             print(timestamp)
-    #             previous_cmd = data_decoded
-
-    def recieve_SIG_RMC_data():
-        global  v_list, h_list
-        pollution_level = ""
-        is_in_plume = False
-        rmc_coords = ""
-        heading_dir = 0
-        new_plume_sequence = 0
-        same_turn_count, turn_dir = 0, 1
-        last_exit_loc = []
-
-        print("Connecting to the server")
-        while True:
-
-            pollution_level
-
-            tcp_data = sock.recv(1024)
-            data_decoded = tcp_data.decode('utf-8')
-
-            # reset_heading()
-            flag = data_decoded.split(",")[0]
-
-            if flag == "$GPRMC":
-                gprmc_coords = data_decoded
-            
-            # TODO: gprmc_coords referenced before assignment
-            elif flag == "$DYSIG" and gprmc_coords:
-                pollution_level = get_pollution_level_from_DYSIG(data_decoded)
-                rmc_coords = get_location_coordinates(gprmc_coords)
-                is_in_plume, new_plume_sequence, same_turn_count, turn_dir, last_exit_loc = algo_challenge4(pollution_level, rmc_coords,
-                    is_in_plume, new_plume_sequence, v_list, h_list, v_list, h_list, same_turn_count, turn_dir, last_exit_loc)
-                write_to_log(pollution_level, rmc_coords, heading_dir)
-            
-            else:
-                print("Caught incorrect DYSIG, GPRMC or CCFEC")
-                print(pollution_level, "\n", rmc_coords)
-            
-            # SUCCESS CONDITION
-            if pollution_level and float(pollution_level) >= 80.0:
-                print ("YAY! DONE IT!")
-                break
+        if flag == "$GPRMC":
+            gprmc_coords = data_decoded
+        
+        # TODO: gprmc_coords referenced before assignment
+        elif flag == "$DYSIG" and gprmc_coords:
+            pollution_level = get_pollution_level_from_DYSIG(data_decoded)
+            rmc_coords = get_location_coordinates(gprmc_coords)
+            is_in_plume, new_plume_sequence, same_turn_count, turn_dir, last_exit_loc = algo_challenge4(pollution_level, rmc_coords,
+                is_in_plume, new_plume_sequence, v_list, h_list, v_list, h_list, same_turn_count, turn_dir, last_exit_loc)
+            write_to_log(pollution_level, rmc_coords, heading_dir)
+        
+        else:
+            print("Caught incorrect DYSIG, GPRMC or CCFEC")
+            print(pollution_level, "\n", rmc_coords)
+        
+        # SUCCESS CONDITION
+        if pollution_level and float(pollution_level) >= 80.0:
+            print ("YAY! DONE IT!")
+            break
 
 
-    def recieve_heading_data():
-        heading_dir = ""
-        while True:
-            tcp_data = sock.recv(1024)
-            data_decoded = tcp_data.decode("utf-8")
-            print(data_decoded)
+def recieve_heading_data():
+    heading_dir = ""
+    while True:
+        tcp_data = sock.recv(1024)
+        data_decoded = tcp_data.decode("utf-8")
+        print(data_decoded)
 
-            flag = data_decoded.split(",")[0]
+        flag = data_decoded.split(",")[0]
 
-            if flag == "$CCFEC":
-                print("$CCFEC", flag)
-                flags_list[2] = get_heading_degrees(data_decoded)
-                # print(get_heading_degrees(data_decoded))
-                print("FEC flag", flags_list[2])
+        if flag == "$CCFEC":
+            print("$CCFEC", flag)
+            flags_list[2] = get_heading_degrees(data_decoded)
+            # print(get_heading_degrees(data_decoded))
+            print("FEC flag", flags_list[2])
 
 
-    def multithread_solution():
-        thread1 = threading.Thread(target=recieve_SIG_RMC_data)
-        thread1.start()
+def multithread_solution():
+    thread1 = threading.Thread(target=recieve_SIG_RMC_data)
+    thread1.start()
 
-        thread2 = threading.Thread(target=recieve_heading_data)
-        # thread2.start()
+    thread2 = threading.Thread(target=recieve_heading_data)
+    # thread2.start()
 
-        thread1.join()
-        # thread2.join()
+    thread1.join()
+    # thread2.join()
 
-    multithread_solution()
+multithread_solution()
 
-    sock.close()
+sock.close()
 
 
 if __name__ == "__main__":

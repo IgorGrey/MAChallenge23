@@ -1,19 +1,18 @@
 {
     "chal1": {
-        "l0_speed": 
+        "l0_speed": 70,
         "l1_distance": 18,
         "l1_speed": 15, 
         "l2_distance": 10,
         "l3_distance": 4,
         "l3_stop_thrust_distance": 1,
         "l3_speed": 5,
-        "last_l3_speed": -55,
+        "last_l3_speed": -66,
         "l3_recovery_distance": 8 
     }, 
 
     "chal2": {
-        "server_tcp_addr": "192.168.10.217",
-        "server_tcp_port": 5200,
+        "server_tcp_port": 49700,
         "l0_obj_distance": 0.0087,
         "l0_speed": 18,
         "l1_obj_distance": 0.0067,

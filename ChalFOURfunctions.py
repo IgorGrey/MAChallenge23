@@ -35,6 +35,21 @@
 
 
 #Normalize the heading value to a value between 0 and 360
+
+import generate_thd_hsc
+import main1
+import socket
+import ports_module
+import threading
+import pynmea2
+from datetime import datetime
+import generate_thd_hsc
+import distanceFormula
+import headingStandalone
+import main1
+import json
+import ChalFOURfunctions
+
 def calculate_within_360(value):
     value %= 360  # Calculate remainder
     if value < 0:
@@ -94,70 +109,3 @@ turn_direction = -1  # -1 for left, 1 for right
 #def read_sensor_data():
     # Code to read SIG value every second
     #return sig_value, gps_location
-
-def make_turn(rmc_):
-    global same_turn_count, turn_direction, #grab current heading from recent RMC OR FEC sentence
-    #calulate new heading by adding 90 for right turn and subtract 90 for left turn to/from current heading and normalizing by calling calculate_within_360(current heading -/+ 90)
-    new_heading = # grab current heading
-    if turn_direction == -1:
-        new_heading = current_heading - 90
-    elif turn_direction == 1:
-        new_heading = current_heading + 90
-    calculate_within_360(new_heading)
-    # Implement logic to update same_turn_count and turn_direction variables accordingly
-    # => NEED to compose NMEA HSC setence and send it to hardware
-    => generate_hcs()
-    => sent it
-
-def process_data(sig_value, gps_location):
-    global same_turn_count, turn_direction, vertical_list, horizontal_list
-    if sig_value < threshold:
-        # Exited plume, reset the same_turn_count and turn_direction
-        same_turn_count = 0
-        turn_direction = -1
-
-    if sig_value >= threshold:
-        # Entered pollution area
-        if same_turn_count == 0 or same_turn_count == 2:
-            vertical_list.append((sig_value, gps_location))
-        elif same_turn_count == 1 or same_turn_count == 3:
-            horizontal_list.append((sig_value, gps_location))
-
-        same_turn_count += 1
-
-        if same_turn_count == 2:
-            turn_direction *= -1
-
-def set_heading(heading):
-    # Code to set the boat's heading towards the approximate epicentre
-
-def check_success_condition():
-    # Code to check if the success condition is met
-
-#Every time after exiting plume if both lists (vertical and horizontal) "filled"
-# create gps loc of exit (DONE)
-# find maximum values withing both lists and grab their gps locations
-# find most probable expicenter location (FORTH CORNER)
-# TODO: if epenter will actually not ithe middle - additional layer of logic required to restart whole alog (DECILE LATER)
-# TODO: this can be triggered on exit of plume!
-# TODO: Also all variablees has to be reset and whole algo restarted apart from one list
-# set_heading towards new gps loc and send HCS to specter (epicenter)
-### COMMENT: IF CONDITION MET - WE FOUND EPICENTER IF NO IT WILL EXIT AND REAPEAT ALL
-
-
-while True:
-    sig_value, gps_location = read_sensor_data()
-    process_data(sig_value, gps_location)
-
-    if len(vertical_list) >= 2 and len(horizontal_list) >= 2:
-        findForthAngle()
-        set_heading(approximate_epicentre)
-        while True:
-            sig_value, gps_location = read_sensor_data()
-            process_data(sig_value, gps_location)
-            if sig_value < threshold:
-                break
-            if check_success_condition():
-                # Success condition met, break the loop
-                break
-
